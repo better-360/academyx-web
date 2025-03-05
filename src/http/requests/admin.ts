@@ -64,7 +64,17 @@ export const addQuestionsToSurvey = async (data: AddQuestionsType) => {
 
 export const getSurveyResults = async (customSurveyId: string) => {
   try {
-    const response = await instance.get(`/surveys/${customSurveyId}/results`);
+    const response = await instance.get(`admin/surveys/${customSurveyId}/results`);
+    return response.data;
+  } catch (error: any) {
+    throw error;
+  }
+};
+
+
+export const getAllResults = async () => {
+  try {
+    const response = await instance.get(`admin/surveys/results`);
     return response.data;
   } catch (error: any) {
     throw error;

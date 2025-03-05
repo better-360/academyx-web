@@ -9,6 +9,7 @@ import {
 import {
   getAllCompanines,
   getAllCustomSurveys,
+  getAllResults,
   getAllSurveys,
   getSurveyResults,
 } from "../../http/requests/admin";
@@ -36,6 +37,8 @@ const Results = () => {
   const [companies, setCompanies] = useState<any[]>([]);
   const [surveys, setSurveys] = useState<any[]>([]);
   const [customSurveys, setCustomSurveys] = useState<any[]>([]);
+
+  
 
   const fetchCompanies = async () => {
     setLoading(true);
@@ -93,12 +96,34 @@ const Results = () => {
     }
   };
 
+  const fetchAllResults = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const resultsData = await getAllResults();
+      setResults(resultsData);
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      setError("Veri yüklenirken bir hata oluştu.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchCompanies();
     fetchSurveys();
     fetchCustomSurveys();
-    fetchResults(selectedCompanyId);
-  }, [selectedCompanyId]);
+  }, []);
+
+  useEffect(() => {
+    if (selectedCompanyId === "") {
+      fetchAllResults();
+    } else {
+      fetchResults(selectedCompanyId);
+    }
+  }
+  , [selectedCompanyId]);
 
   const getCompletionPercentage = (completed: number, total: number) => {
     return total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -158,7 +183,7 @@ const Results = () => {
       )}
 
       <div className="space-y-8">
-        {results.map((result) => (
+        {results&&results.length>0? results.map((result) => (
           <div
             key={`${result.courseId}-${result.companyId}`}
             className="bg-white rounded-lg shadow-md overflow-hidden"
@@ -292,9 +317,7 @@ const Results = () => {
               </div>
             </div>
           </div>
-        ))}
-
-        {results.length === 0 && (
+        )):(
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <PieChart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
