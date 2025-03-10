@@ -4,6 +4,8 @@ import { GraduationCap } from 'lucide-react';
 import { loginWithEmail } from '../../http/requests';
 import toast from 'react-hot-toast';
 import { saveUserTokens } from '../../utils/storage';
+import { useAppDispatch } from '../../store/hooks';
+import { login } from '../../store/slices/userSlice';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -11,7 +13,7 @@ const AdminLogin = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
+const dispatch = useAppDispatch();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,6 +22,7 @@ const AdminLogin = () => {
     try {
       const logindata=await loginWithEmail(email, password);
       saveUserTokens(logindata.tokens);
+            dispatch(login(logindata));
     if(logindata.user.role==='SYSADMIN'){
       navigate('/admin');
     }

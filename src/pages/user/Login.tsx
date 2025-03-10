@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { GraduationCap, Mail, Lock, AlertCircle } from "lucide-react";
 import { loginWithEmail } from "../../http/requests";
 import { saveUserTokens } from "../../utils/storage";
+import { useAppDispatch } from "../../store/hooks";
+import { login } from "../../store/slices/userSlice";
 
 const UserLogin = () => {
   const [email, setEmail] = useState("");
@@ -10,6 +12,7 @@ const UserLogin = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,6 +21,7 @@ const UserLogin = () => {
 
     try {
       const userLogin = await loginWithEmail(email, password);
+      dispatch(login(userLogin));
       saveUserTokens(userLogin.tokens);
       if (userLogin.user.role === "COMPANY_ADMIN") {
         throw new Error("Bu hesap çalışan hesabı değil.");

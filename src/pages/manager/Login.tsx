@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { GraduationCap, Mail, Lock, AlertCircle } from "lucide-react";
 import { loginWithEmail } from "../../http/requests";
 import { saveUserTokens } from "../../utils/storage";
+import { useAppDispatch } from "../../store/hooks";
+import { login } from "../../store/slices/userSlice";
 
 const ManagerLogin = () => {
   const [email, setEmail] = useState("");
@@ -10,6 +12,7 @@ const ManagerLogin = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,9 +20,11 @@ const ManagerLogin = () => {
     setError("");
 
     try {
-      const userLogin = await loginWithEmail(email, password);
-      saveUserTokens(userLogin.tokens);
-      if (userLogin.user.role === "COMPANY_ADMIN") {
+      const logindata=await loginWithEmail(email, password);
+      saveUserTokens(logindata.tokens);
+      dispatch(login(logindata));
+
+      if (logindata.user.role === "COMPANY_ADMIN") {
         navigate("/manager");
       } else {
         throw new Error("Bu hesap company admin hesabı değil.");

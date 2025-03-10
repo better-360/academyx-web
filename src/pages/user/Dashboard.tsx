@@ -19,8 +19,6 @@ const Dashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const userData=useAppSelector((state)=>state.user.userData);
 
-
-  let companyId = "1";
   
   const dispatch = useAppDispatch();
   useEffect(() => {
@@ -35,7 +33,7 @@ const Dashboard = () => {
   
 
   const fetchSurveys = async () => {
-    const surveys=await instance.get(`/companies/${companyId}/surveys`);
+    const surveys=await instance.get(`/companies/${userData.companyId}/surveys`);
     setSurveys(surveys.data);
     setLoading(false);
   };
