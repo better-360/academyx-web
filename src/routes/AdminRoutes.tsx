@@ -11,7 +11,7 @@ import ProtectedRoute from "./ProtectedRoute";
 
 export default function AdminRoutes() {
   return (
-    <ProtectedRoute requiredRole="COMPANY_ADMIN">
+    <ProtectedRoute requiredRole="SYSADMIN">
       <Routes>
          <Route path="/" element={<AdminDashboard />} />
           <Route path="companies" element={<Companies />} />

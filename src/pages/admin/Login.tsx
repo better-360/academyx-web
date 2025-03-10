@@ -20,7 +20,7 @@ const AdminLogin = () => {
     try {
       const logindata=await loginWithEmail(email, password);
       saveUserTokens(logindata.tokens);
-    if(logindata.user.role==='COMPANY_ADMIN'){
+    if(logindata.user.role==='SYSADMIN'){
       navigate('/admin');
     }
     } catch (error) {

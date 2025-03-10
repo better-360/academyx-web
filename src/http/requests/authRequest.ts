@@ -39,6 +39,7 @@ const forgotPassword = async (email: string): Promise<string> => {
 const loginWithEmail=async(email:string,password:string):Promise<UserInterface>=>{
   try {
     const response = await baseApi.post('/auth/sign-in', { email, password });
+    console.log(response.data);
     return response.data;
   } catch (error: any) {
     throw error;
