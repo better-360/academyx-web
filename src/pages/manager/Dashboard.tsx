@@ -11,30 +11,25 @@ import { getUserData } from "../../http/requests";
 import { setUserData } from "../../store/slices/userSlice";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import instance from "../../http/instance";
+import { getMyCompanySurveys } from "../../http/requests/companyRequests";
 
 const ManagerDashboard = () => {
   const navigate = useNavigate();
   const [surveys, setSurveys] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const userData=useAppSelector((state)=>state.user.userData);
-  let companyId = "1";
 
-  const dispatch = useAppDispatch();
   useEffect(() => {
-    fetchUserData();
     fetchSurveys();
   }, []);
 
-  const fetchUserData = async () => {
-    const userdata = await getUserData();
-    dispatch(setUserData(userdata));
-  };
-  
+
 
   const fetchSurveys = async () => {
-    const surveys=await instance.get(`/companies/${companyId}/surveys`);
-    setSurveys(surveys.data);
+    setLoading(true);
+    const surveys=await getMyCompanySurveys();
+    setSurveys(surveys);
     setLoading(false);
   };
 

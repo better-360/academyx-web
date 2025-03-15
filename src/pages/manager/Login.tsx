@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, Mail, Lock, AlertCircle } from "lucide-react";
 import { loginWithEmail } from "../../http/requests";
-import { saveUserTokens } from "../../utils/storage";
+import { saveUserTokens, setActiveCompanyId } from "../../utils/storage";
 import { useAppDispatch } from "../../store/hooks";
 import { login } from "../../store/slices/userSlice";
 
@@ -23,8 +23,9 @@ const ManagerLogin = () => {
       const logindata=await loginWithEmail(email, password);
       saveUserTokens(logindata.tokens);
       dispatch(login(logindata));
+      setActiveCompanyId(logindata.user.companyId);
 
-      if (logindata.user.role === "COMPANY_ADMIN") {
+      if (logindata.user.companyRole === "manager") {
         navigate("/manager");
       } else {
         throw new Error("Bu hesap company admin hesabı değil.");

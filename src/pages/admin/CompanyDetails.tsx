@@ -36,7 +36,7 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: "manager" | "employee";
+  companyRole: "manager" | "employee";
   companyId: string;
   createdAt: string;
 }
@@ -46,7 +46,7 @@ interface UserFormData {
   firstName: string;
   lastName: string;
   password: string;
-  companyRole: "manager" | "employee";
+  companyRole: ""| "manager" | "employee";
 }
 
 const CompanyDetails: React.FC = () => {
@@ -140,6 +140,7 @@ const CompanyDetails: React.FC = () => {
     if (!id) return;
     try {
       const usersData = await getCompanyUsers(id);
+      console.log('usersData',usersData);
       setUsers(usersData);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -191,7 +192,7 @@ const CompanyDetails: React.FC = () => {
         firstName: "",
         lastName: "",
         password: "",
-        companyRole: "employee",
+        companyRole: "",
       });
       await fetchUsers();
     } catch (error: any) {
@@ -220,7 +221,7 @@ const CompanyDetails: React.FC = () => {
       firstName: user.firstName,
       lastName: user.lastName,
       password: "",
-      companyRole: user.role,
+      companyRole: user.companyRole,
     });
     setIsUserModalOpen(true);
   };
@@ -333,7 +334,7 @@ const CompanyDetails: React.FC = () => {
                 firstName: "",
                 lastName: "",
                 password: "",
-                companyRole: "employee",
+                companyRole: "",
               });
               setIsUserModalOpen(true);
             }}
@@ -369,7 +370,7 @@ const CompanyDetails: React.FC = () => {
                 </h4>
                 <p className="text-sm text-gray-600">{user.email}</p>
                 <span className="inline-block px-2 py-1 text-xs rounded-full mt-1 bg-primary bg-opacity-10 text-primary">
-                  {user.role === "manager" ? "Yönetici" : "Çalışan"}
+                  {user.companyRole === "manager" ? "Yönetici" : "Çalışan"}
                 </span>
               </div>
               <div className="flex space-x-2">
@@ -535,7 +536,7 @@ const CompanyDetails: React.FC = () => {
                   onChange={(e) =>
                     setUserFormData({
                       ...userFormData,
-                      companyRole: e.target.value as "manager" | "employee",
+                      companyRole: e.target.value as UserFormData["companyRole"],
                     })
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"

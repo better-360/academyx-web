@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ClipboardList, Plus, X, Building2 } from 'lucide-react';
-import { createCustomSurvey, getAllCompanines, getAllSurveys } from '../../http/requests/admin';
+import { ClipboardList, Plus, X, Building2,Eye } from 'lucide-react';
+import { createCustomSurvey, getAllCompanines, getAllCustomSurveys, getAllSurveys } from '../../http/requests/admin';
+import { useNavigate } from 'react-router-dom';
 
 interface Company {
   id: string;
@@ -17,10 +18,10 @@ interface Assignment {
   id: string;
   courseId: string;
   companyId: string;
-  assignedAt: string;
+  createdAt: string;
   dueDate?: string;
-  courseName: string;
-  companyName: string;
+  title: string;
+  company: Company; // companyName eklendi
 }
 
 const AssignAssessments = () => {
@@ -36,24 +37,54 @@ const AssignAssessments = () => {
     companyId: '',
     dueDate: ''
   });
+  const [dataFetched, setDataFetched] = useState(false); // Verilerin yüklenip yüklenmediğini takip etmek için
+
+  const navigate = useNavigate();
+
+  const handleEdit = async (assignmentId: string) => {
+    navigate(`/admin/assignments/${assignmentId}/details`,{replace:true});
+  };
+
+  const fetchCustomSurveys = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const surveysData = await getAllCustomSurveys();
+      setAssignments(surveysData); // Burada assignments'a atama yapılıyor
+    } catch (error) {
+      console.error('Error fetching surveys:', error);
+      setError('Veri yüklenirken bir hata oluştu.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchData();
+    fetchCustomSurveys();
+    // fetchData() çağrısı kaldırıldı, sadece gerektiğinde çağrılacak
   }, []);
 
   const fetchData = async () => {
+    if (dataFetched) return; // Veriler zaten yüklendiyse tekrar istek atma
+    
     setLoading(true);
     try {
-      const companiesData=await getAllCompanines();
+      const companiesData = await getAllCompanines();
       setCompanies(companiesData);
       const surveysData = await getAllSurveys();
       setSurveys(surveysData);
+      setDataFetched(true); // Verilerin yüklendiğini işaretle
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('Veriler yüklenirken bir hata oluştu.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOpenAssignModal = () => {
+    fetchData(); // Modal açıldığında verileri yükle
+    setShowAssignModal(true);
   };
 
   const handleAssign = async (e: React.FormEvent) => {
@@ -76,7 +107,7 @@ const AssignAssessments = () => {
         title: formData.title,
         surveyId: formData.surveyId,
         companyId: formData.companyId,
-        dueDate: formData.dueDate || null
+        dueDate: new Date(formData.dueDate) || null
       };
 
       await createCustomSurvey(customSurveyData);
@@ -88,7 +119,9 @@ const AssignAssessments = () => {
         companyId: '',
         dueDate: ''
       });
-      await fetchData();
+      
+      // Sadece atamaları güncelle, tüm verileri tekrar çekme
+      await fetchCustomSurveys();
     } catch (error: any) {
       console.error('Error assigning assessment:', error);
       setError(error.message || 'Değerlendirme atanırken bir hata oluştu.');
@@ -102,9 +135,12 @@ const AssignAssessments = () => {
       return;
     }
 
+
     setLoading(true);
     try {
-      await fetchData();
+      // Silme işlemi için gerekli kodlar eklenebilir
+      // Başarılı silme sonrası güncel verileri çek
+      await fetchCustomSurveys();
     } catch (error) {
       console.error('Error deleting assignment:', error);
       setError('Atama silinirken bir hata oluştu.');
@@ -126,7 +162,7 @@ const AssignAssessments = () => {
           </p>
         </div>
         <button
-          onClick={() => setShowAssignModal(true)}
+          onClick={handleOpenAssignModal} // fetchData() çağrısı için yeni fonksiyon kullanılıyor
           className="bg-primary text-white px-4 py-2 rounded-lg flex items-center hover:bg-primary-dark transition-colors"
           disabled={loading}
         >
@@ -179,18 +215,18 @@ const AssignAssessments = () => {
                 <tr key={assignment.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      {assignment.courseName}
+                      {assignment.title}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <Building2 className="w-4 h-4 text-gray-400 mr-2" />
-                      <div className="text-sm text-gray-900">{assignment.companyName}</div>
+                      <div className="text-sm text-gray-900">{assignment.company.name}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500">
-                      {new Date(assignment.assignedAt).toLocaleDateString('tr-TR')}
+                      {new Date(assignment.createdAt).toLocaleDateString('tr-TR')}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -198,12 +234,18 @@ const AssignAssessments = () => {
                       {assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString('tr-TR') : '-'}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                     <button
                       onClick={() => handleDelete(assignment.id)}
                       className="text-red-600 hover:text-red-900"
                     >
                       <X className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => handleEdit(assignment.id)}
+                      className="text-gray-600 hover:text-blue-500"
+                    >
+                      <Eye className="w-5 h-5" />
                     </button>
                   </td>
                 </tr>

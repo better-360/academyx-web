@@ -1,23 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Users as UsersIcon, Search, Filter, Trash2, Mail, Building2, Calendar } from 'lucide-react';
-import instance from '../../http/instance';
-import { deleteCompanyUser } from '../../http/requests/admin';
+import { deletePersonnel, getMyPersonnels } from '../../http/requests/companyRequests';
 
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: 'SYSADMIN'|'PERSONNEL'|'COMPANY_ADMIN' | 'manager' | 'employee';
-  companyId: string;
-  createdAt: string;
-  company?: {
-    name: string;
-  };
-}
-
-const AdminUsers = () => {
-  const [users, setUsers] = useState<User[]>([]);
+const ManagerUsers = () => {
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,9 +19,8 @@ const AdminUsers = () => {
     setLoading(true);
     setError(null);
     try {
-      
-      const res= await instance.get(`admin/users/get-all`)
-      setUsers(res.data);
+      const res= await getMyPersonnels();
+      setUsers(res);
     } catch (error) {
       console.error('Error fetching users:', error);
       setError('Kullanıcılar yüklenirken bir hata oluştu.');
@@ -51,7 +36,7 @@ const AdminUsers = () => {
 
     setLoading(true);
     try {
-      await deleteCompanyUser(userId);
+      await deletePersonnel(userId);
       await fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -69,7 +54,7 @@ const AdminUsers = () => {
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.company?.name.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const roleMatch = roleFilter === 'all' || user.role === roleFilter;
+      const roleMatch = roleFilter === 'all' || user.companyRole === roleFilter;
 
       return searchMatch && roleMatch;
     })
@@ -104,8 +89,6 @@ const AdminUsers = () => {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'admin':
-        return 'bg-red-100 text-red-800';
       case 'manager':
         return 'bg-blue-100 text-blue-800';
       case 'employee':
@@ -117,8 +100,6 @@ const AdminUsers = () => {
 
   const getRoleText = (role: string) => {
     switch (role) {
-      case 'COMPANY_ADMIN':
-        return 'Admin';
       case 'manager':
         return 'Yönetici';
       case 'employee':
@@ -171,7 +152,6 @@ const AdminUsers = () => {
                 className="appearance-none pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               >
                 <option value="all">Tüm Roller</option>
-                <option value="admin">Admin</option>
                 <option value="manager">Yönetici</option>
                 <option value="employee">Çalışan</option>
               </select>
@@ -237,22 +217,6 @@ const AdminUsers = () => {
                       <span className="ml-1">{sortOrder === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </th>
-                  <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-primary"
-                    onClick={() => {
-                      if (sortBy === 'company') {
-                        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-                      } else {
-                        setSortBy('company');
-                        setSortOrder('asc');
-                      }
-                    }}
-                  >
-                    Şirket
-                    {sortBy === 'company' && (
-                      <span className="ml-1">{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Kayıt Tarihi
                   </th>
@@ -277,14 +241,8 @@ const AdminUsers = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeColor(user.role)}`}>
-                        {getRoleText(user.role)}
+                        {getRoleText(user.companyRole)}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Building2 className="w-4 h-4 mr-2" />
-                        {user.company?.name || '-'}
-                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-600">
@@ -318,4 +276,4 @@ const AdminUsers = () => {
   );
 };
 
-export default AdminUsers;
+export default ManagerUsers;

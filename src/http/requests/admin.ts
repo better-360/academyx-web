@@ -44,7 +44,7 @@ export const updateSurvey = async (surveyId: string, data: any) => {
 
 export const deleteSurvey = async (surveyId: string) => {
   try {
-    const response = await instance.delete(`/surveys/${surveyId}/delete`);
+    const response = await instance.delete(`admin/surveys/${surveyId}`);
     return response.data;
   } catch (error: any) {
     throw error;
@@ -184,7 +184,7 @@ export const updateCompanyStatus = async (
 ) => {
   try {
     const response = await instance.patch(
-      `/companies/${companyId}/update-status`,
+      `admin/companies/${companyId}/update-status`,
       status
     );
     return response.data;
@@ -195,7 +195,7 @@ export const updateCompanyStatus = async (
 
 export const deleteCompany = async (companyId: string) => {
   try {
-    const response = await instance.delete(`/companies/${companyId}delete`);
+    const response = await instance.delete(`admin/companies/${companyId}/delete`);
     return response.data;
   } catch (error: any) {
     throw error;
@@ -250,5 +250,3 @@ export const getCompanyUsers = async (companyId: string): Promise<any> => {
       throw error;
     }
   }
-
-

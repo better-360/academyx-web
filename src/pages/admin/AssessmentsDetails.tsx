@@ -10,9 +10,8 @@ import {
   Pencil,
 } from "lucide-react";
 import {
-  createSurvey,
-  getSurvey,
-  updateSurvey,
+  getCustomSurvey,
+  updateCustomSurvey,
 } from "../../http/requests/admin";
 
 interface Question {
@@ -20,16 +19,7 @@ interface Question {
   options: string[];
 }
 
-interface Course {
-  id: string;
-  title: string;
-  description?: string;
-  questions: Question[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-const CourseEdit = () => {
+const AssessmentsDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -54,25 +44,28 @@ const CourseEdit = () => {
   const [draggedQuestionIndex, setDraggedQuestionIndex] = useState<
     number | null
   >(null);
-  
+
   useEffect(() => {
     if (id) {
-      fetchSurvey(id);
+      fetchCustomSurvey(id);
     }
   }, [id]);
 
-  const fetchSurvey = async (id: string) => {
+  const fetchCustomSurvey = async (id: string) => {
     setLoading(true);
     setError(null);
     try {
-      const surveysData = await getSurvey(id);
+      const surveysData = await getCustomSurvey(id);
       // API'den gelen veriyi güvenli bir şekilde formData'ya atıyoruz
       setFormData({
         title: surveysData.title || "",
         description: surveysData.description || "",
         // questions dizisi yoksa veya null ise boş dizi atıyoruz
-        questions: Array.isArray(surveysData.questions) ? surveysData.questions : [],
+        questions: Array.isArray(surveysData.questions)
+          ? surveysData.questions
+          : [],
       });
+
       console.log(surveysData);
     } catch (error) {
       console.error("Error fetching surveys:", error);
@@ -89,20 +82,15 @@ const CourseEdit = () => {
     setError(null);
     try {
       const surveyData = {
-      title: formData.title,
-      description: formData.description,
-      questions:formData.questions,
+        title: formData.title,
+        description: formData.description,
+        questions: formData.questions,
       };
+      if (!id) return;
+      await updateCustomSurvey(id, surveyData);
+      setLoading(false);
 
-      if (id) {
-        await updateSurvey(id, surveyData);
-        setLoading(false);
-      } else {
-        await createSurvey(surveyData);
-        setLoading(false);
-      }
-
-      navigate("/admin/courses");
+      navigate("/admin/assignments");
     } catch (error) {
       console.error("Error saving course:", error);
       setError("Değerlendirme kaydedilirken bir hata oluştu.");
@@ -255,83 +243,84 @@ const CourseEdit = () => {
             </div>
 
             <div className="space-y-4">
-              
-              {formData.questions && Array.isArray(formData.questions) && formData.questions.length > 0 ? (
-                formData.questions.map((question, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start justify-between bg-gray-50 p-4 rounded-lg group"
-                    draggable
-                    onDragStart={() => setDraggedQuestionIndex(index)}
-                    onDragEnd={() => setDraggedQuestionIndex(null)}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      if (
-                        draggedQuestionIndex !== null &&
-                        draggedQuestionIndex !== index
-                      ) {
-                        handleMoveQuestion(draggedQuestionIndex, index);
-                        setDraggedQuestionIndex(index);
-                      }
-                    }}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center mb-2">
-                        <GripVertical className="w-5 h-5 text-gray-400 cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <span className="text-sm text-gray-500 mr-2">
-                          {index + 1}.
-                        </span>
-                        <p className="font-medium flex-1">{question.text}</p>
+              {formData.questions &&
+              Array.isArray(formData.questions) &&
+              formData.questions.length > 0
+                ? formData.questions.map((question, index) => (
+                    <div
+                      key={index}
+                      className="flex items-start justify-between bg-gray-50 p-4 rounded-lg group"
+                      draggable
+                      onDragStart={() => setDraggedQuestionIndex(index)}
+                      onDragEnd={() => setDraggedQuestionIndex(null)}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        if (
+                          draggedQuestionIndex !== null &&
+                          draggedQuestionIndex !== index
+                        ) {
+                          handleMoveQuestion(draggedQuestionIndex, index);
+                          setDraggedQuestionIndex(index);
+                        }
+                      }}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center mb-2">
+                          <GripVertical className="w-5 h-5 text-gray-400 cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <span className="text-sm text-gray-500 mr-2">
+                            {index + 1}.
+                          </span>
+                          <p className="font-medium flex-1">{question.text}</p>
+                        </div>
+                        <div className="ml-7 space-y-1">
+                          {question.options && Array.isArray(question.options)
+                            ? question.options.map((option, optionIndex) => (
+                                <p
+                                  key={optionIndex}
+                                  className="text-sm text-gray-600 flex items-center"
+                                >
+                                  <span className="w-6">
+                                    {String.fromCharCode(65 + optionIndex)}
+                                  </span>
+                                  {option}
+                                </p>
+                              ))
+                            : null}
+                        </div>
                       </div>
-                      <div className="ml-7 space-y-1">
-                        {question.options && Array.isArray(question.options) ? (
-                          question.options.map((option, optionIndex) => (
-                            <p
-                              key={optionIndex}
-                              className="text-sm text-gray-600 flex items-center"
-                            >
-                              <span className="w-6">
-                                {String.fromCharCode(65 + optionIndex)}
-                              </span>
-                              {option}
-                            </p>
-                          ))
-                        ) : null}
+                      <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          type="button"
+                          onClick={() => handleDuplicateQuestion(question)}
+                          className="text-gray-600 hover:text-primary"
+                          title="Soruyu Çoğalt"
+                        >
+                          <Copy className="w-5 h-5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingQuestionIndex(index);
+                            setNewQuestion(question);
+                            setShowQuestionForm(true);
+                          }}
+                          className="text-gray-600 hover:text-primary"
+                          title="Düzenle"
+                        >
+                          <Pencil className="w-5 h-5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveQuestion(index)}
+                          className="text-gray-600 hover:text-red-500"
+                          title="Sil"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
                       </div>
                     </div>
-                    <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        type="button"
-                        onClick={() => handleDuplicateQuestion(question)}
-                        className="text-gray-600 hover:text-primary"
-                        title="Soruyu Çoğalt"
-                      >
-                        <Copy className="w-5 h-5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingQuestionIndex(index);
-                          setNewQuestion(question);
-                          setShowQuestionForm(true);
-                        }}
-                        className="text-gray-600 hover:text-primary"
-                        title="Düzenle"
-                      >
-                        <Pencil className="w-5 h-5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveQuestion(index)}
-                        className="text-gray-600 hover:text-red-500"
-                        title="Sil"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : null}
+                  ))
+                : null}
 
               {(!formData.questions || !formData.questions.length) && (
                 <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
@@ -465,4 +454,4 @@ const CourseEdit = () => {
   );
 };
 
-export default CourseEdit;
+export default AssessmentsDetails;

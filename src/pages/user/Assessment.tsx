@@ -1,15 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, CheckCircle, AlertCircle, Lock, Shield, UserRound, BarChart } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle,
+  AlertCircle,
+  Lock,
+  Shield,
+  UserRound,
+  BarChart,
+} from "lucide-react";
+import { getCustomSurvey } from "../../http/requests/admin";
+import { ICustomSurvey } from "../../types/customsurvey";
+import { SubmitResponse, SubmitResponseItem } from "../../types/answers";
+import instance from "../../http/instance";
 
-
-
-const TakeAssessment = () => {
+const UserAssessment = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [assessment, setAssessment] = useState(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<string[]>([]);
+  const [assessment, setAssessment] = useState<ICustomSurvey|null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
+  const [answers, setAnswers] = useState<SubmitResponseItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,28 +29,54 @@ const TakeAssessment = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      fetchAssessment();
-    }
+    fetchAssessment();
   }, [id]);
 
-  const fetchAssessment = async () => {
+  // Soru yüklendikten sonra answers dizisini hazırla
+  useEffect(() => {
+    if (assessment && assessment.questions) {
+      // Her soru için boş bir cevap objesi oluştur
+      const initialAnswers = assessment.questions.map(question => ({
+        customSurveyQuestionId: question.id,
+        selectedOption: ""
+      }));
+      setAnswers(initialAnswers);
+    }
+  }, [assessment]);
 
+  const fetchAssessment = async () => {
     setLoading(true);
     try {
-      
+      if (!id) throw new Error("Değerlendirme bulunamadı.");
+      const survey = await getCustomSurvey(id);
+      setAssessment(survey);
     } catch (error: any) {
-      console.error('Error fetching assessment:', error);
-      setError(error.message || 'Değerlendirme yüklenirken bir hata oluştu.');
+      console.error("Error fetching assessment:", error);
+      setError(error.message || "Değerlendirme yüklenirken bir hata oluştu.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAnswer = (answer: string) => {
+  const handleAnswer = (option: string) => {
+    if (!assessment) return;
+    
     const newAnswers = [...answers];
-    newAnswers[currentQuestionIndex] = answer;
-    setAnswers(newAnswers);
+    // Mevcut sorunun ID'sini al
+    const currentQuestionId = assessment.questions[currentQuestionIndex].id;
+    
+    // Bu ID'ye sahip cevabı bul ve güncelle
+    const answerIndex = newAnswers.findIndex(
+      a => a.customSurveyQuestionId === currentQuestionId
+    );
+    
+    if (answerIndex !== -1) {
+      newAnswers[answerIndex] = {
+        ...newAnswers[answerIndex],
+        selectedOption: option
+      };
+      setAnswers(newAnswers);
+    }
   };
 
   const handleNext = () => {
@@ -55,19 +92,28 @@ const TakeAssessment = () => {
   };
 
   const handleSubmit = async () => {
-
     setSubmitting(true);
     try {
       // Tüm soruların cevaplandığını kontrol et
-      const unansweredCount = answers.filter(a => !a).length;
+      const unansweredCount = answers.filter((a) => !a.selectedOption).length;
       if (unansweredCount > 0) {
-        throw new Error(`${unansweredCount} soru cevaplanmamış. Lütfen tüm soruları cevaplayın.`);
+        throw new Error(
+          `${unansweredCount} soru cevaplanmamış. Lütfen tüm soruları cevaplayın.`
+        );
       }
-     
-      navigate('/user');
+
+      // API'ye gönderilecek veriyi hazırla
+      const data: SubmitResponse = {
+        customSurveyId: assessment?.id,
+        responses: answers
+      };
+console.log('APIye gönderilmeye hazırlanan data:',data);
+      // API'ye veriyi gönder
+      await instance.post("/surveys/submit-response-question", data);
+      navigate("/user");
     } catch (error: any) {
-      console.error('Error submitting assessment:', error);
-      setError(error.message || 'Değerlendirme gönderilirken bir hata oluştu.');
+      console.error("Error submitting assessment:", error);
+      setError(error.message || "Değerlendirme gönderilirken bir hata oluştu.");
     } finally {
       setSubmitting(false);
     }
@@ -75,7 +121,7 @@ const TakeAssessment = () => {
 
   const handleStartAssessment = () => {
     if (!agreedToTerms) {
-      setError('Lütfen değerlendirme şartlarını kabul edin.');
+      setError("Lütfen değerlendirme şartlarını kabul edin.");
       return;
     }
     setShowIntro(false);
@@ -99,7 +145,7 @@ const TakeAssessment = () => {
           <div className="ml-3">
             <p className="text-sm text-red-700">{error}</p>
             <button
-              onClick={() => navigate('/user')}
+              onClick={() => navigate("/user")}
               className="mt-2 text-sm text-red-700 hover:text-red-600"
             >
               Geri Dön
@@ -114,7 +160,7 @@ const TakeAssessment = () => {
     return (
       <div className="max-w-3xl mx-auto">
         <button
-          onClick={() => navigate('/user')}
+          onClick={() => navigate("/user/assessments")}
           className="flex items-center text-gray-600 hover:text-primary mb-6"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
@@ -135,40 +181,52 @@ const TakeAssessment = () => {
             <div className="bg-blue-50 p-6 rounded-lg">
               <div className="flex items-center mb-4">
                 <Shield className="w-8 h-8 text-blue-600 mr-3" />
-                <h3 className="text-lg font-semibold text-blue-900">Gizlilik Garantisi</h3>
+                <h3 className="text-lg font-semibold text-blue-900">
+                  Gizlilik Garantisi
+                </h3>
               </div>
               <p className="text-blue-800">
-                Tüm cevaplarınız anonim olarak toplanır ve saklanır. Kimliğiniz hiçbir şekilde cevaplarınızla ilişkilendirilmez.
+                Tüm cevaplarınız anonim olarak toplanır ve saklanır. Kimliğiniz
+                hiçbir şekilde cevaplarınızla ilişkilendirilmez.
               </p>
             </div>
 
             <div className="bg-green-50 p-6 rounded-lg">
               <div className="flex items-center mb-4">
                 <UserRound className="w-8 h-8 text-green-600 mr-3" />
-                <h3 className="text-lg font-semibold text-green-900">Dürüst Geri Bildirim</h3>
+                <h3 className="text-lg font-semibold text-green-900">
+                  Dürüst Geri Bildirim
+                </h3>
               </div>
               <p className="text-green-800">
-                Samimi ve dürüst cevaplarınız, şirketinizin gelişimine önemli katkı sağlayacaktır.
+                Samimi ve dürüst cevaplarınız, şirketinizin gelişimine önemli
+                katkı sağlayacaktır.
               </p>
             </div>
 
             <div className="bg-purple-50 p-6 rounded-lg">
               <div className="flex items-center mb-4">
                 <Lock className="w-8 h-8 text-purple-600 mr-3" />
-                <h3 className="text-lg font-semibold text-purple-900">Güvenli Sistem</h3>
+                <h3 className="text-lg font-semibold text-purple-900">
+                  Güvenli Sistem
+                </h3>
               </div>
               <p className="text-purple-800">
-                Verileriniz güvenli bir şekilde saklanır ve sadece toplu istatistikler için kullanılır.
+                Verileriniz güvenli bir şekilde saklanır ve sadece toplu
+                istatistikler için kullanılır.
               </p>
             </div>
 
             <div className="bg-orange-50 p-6 rounded-lg">
               <div className="flex items-center mb-4">
                 <BarChart className="w-8 h-8 text-orange-600 mr-3" />
-                <h3 className="text-lg font-semibold text-orange-900">Gelişim Odaklı</h3>
+                <h3 className="text-lg font-semibold text-orange-900">
+                  Gelişim Odaklı
+                </h3>
               </div>
               <p className="text-orange-800">
-                Değerlendirme sonuçları, şirket kültürünü ve çalışma ortamını iyileştirmek için kullanılacaktır.
+                Değerlendirme sonuçları, şirket kültürünü ve çalışma ortamını
+                iyileştirmek için kullanılacaktır.
               </p>
             </div>
           </div>
@@ -183,12 +241,11 @@ const TakeAssessment = () => {
                   className="mt-1 h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
                 />
                 <span className="ml-2 text-sm text-gray-600">
-                  Yukarıdaki bilgileri okudum ve anladım. Değerlendirmeyi dürüstçe yanıtlayacağımı taahhüt ediyorum.
+                  Yukarıdaki bilgileri okudum ve anladım. Değerlendirmeyi
+                  dürüstçe yanıtlayacağımı taahhüt ediyorum.
                 </span>
               </label>
-              {error && (
-                <p className="mt-2 text-sm text-red-600">{error}</p>
-              )}
+              {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
             </div>
 
             <div className="flex justify-end">
@@ -196,8 +253,8 @@ const TakeAssessment = () => {
                 onClick={handleStartAssessment}
                 className={`px-6 py-3 rounded-lg flex items-center ${
                   agreedToTerms
-                    ? 'bg-primary text-white hover:bg-primary-dark'
-                    : 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                    ? "bg-primary text-white hover:bg-primary-dark"
+                    : "bg-gray-300 text-gray-600 cursor-not-allowed"
                 }`}
                 disabled={!agreedToTerms}
               >
@@ -212,12 +269,20 @@ const TakeAssessment = () => {
   }
 
   const currentQuestion = assessment.questions[currentQuestionIndex];
-  const progress = Math.round(((currentQuestionIndex + 1) / assessment.questions.length) * 100);
+  const progress = Math.round(
+    ((currentQuestionIndex + 1) / assessment.questions.length) * 100
+  );
+
+  // Şu anki sorunun cevabını bul
+  const currentAnswer = answers.find(
+    a => a.customSurveyQuestionId === currentQuestion.id
+  );
+  const selectedOption = currentAnswer ? currentAnswer.selectedOption : "";
 
   return (
     <div className="max-w-3xl mx-auto">
       <button
-        onClick={() => navigate('/user')}
+        onClick={() => navigate("/user")}
         className="flex items-center text-gray-600 hover:text-primary mb-6"
       >
         <ArrowLeft className="w-5 h-5 mr-2" />
@@ -226,11 +291,12 @@ const TakeAssessment = () => {
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <h1 className="text-2xl font-bold text-primary-darker mb-2">
-          {assessment.courseName}
+          {assessment.title}
         </h1>
         {assessment.dueDate && (
           <p className="text-sm text-gray-600">
-            Son Tarih: {new Date(assessment.dueDate).toLocaleDateString('tr-TR')}
+            Son Tarih:{" "}
+            {new Date(assessment.dueDate).toLocaleDateString("tr-TR")}
           </p>
         )}
       </div>
@@ -259,9 +325,9 @@ const TakeAssessment = () => {
                 <label
                   key={index}
                   className={`block p-4 border rounded-lg cursor-pointer transition-colors ${
-                    answers[currentQuestionIndex] === option
-                      ? 'border-primary bg-primary bg-opacity-5'
-                      : 'border-gray-200 hover:border-primary'
+                    selectedOption === option
+                      ? "border-primary bg-primary bg-opacity-5"
+                      : "border-gray-200 hover:border-primary"
                   }`}
                 >
                   <div className="flex items-center">
@@ -269,7 +335,7 @@ const TakeAssessment = () => {
                       type="radio"
                       name="answer"
                       value={option}
-                      checked={answers[currentQuestionIndex] === option}
+                      checked={selectedOption === option}
                       onChange={(e) => handleAnswer(e.target.value)}
                       className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
                     />
@@ -286,8 +352,8 @@ const TakeAssessment = () => {
               disabled={currentQuestionIndex === 0}
               className={`flex items-center px-4 py-2 rounded ${
                 currentQuestionIndex === 0
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-gray-600 hover:text-primary'
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-gray-600 hover:text-primary"
               }`}
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
@@ -296,11 +362,11 @@ const TakeAssessment = () => {
             {currentQuestionIndex === assessment.questions.length - 1 ? (
               <button
                 onClick={() => setShowConfirmation(true)}
-                disabled={!answers[currentQuestionIndex]}
+                disabled={!selectedOption}
                 className={`flex items-center px-4 py-2 rounded ${
-                  !answers[currentQuestionIndex]
-                    ? 'bg-gray-300 cursor-not-allowed'
-                    : 'bg-primary text-white hover:bg-primary-dark'
+                  !selectedOption
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-primary text-white hover:bg-primary-dark"
                 }`}
               >
                 <CheckCircle className="w-5 h-5 mr-2" />
@@ -309,11 +375,11 @@ const TakeAssessment = () => {
             ) : (
               <button
                 onClick={handleNext}
-                disabled={!answers[currentQuestionIndex]}
+                disabled={!selectedOption}
                 className={`flex items-center px-4 py-2 rounded ${
-                  !answers[currentQuestionIndex]
-                    ? 'bg-gray-300 cursor-not-allowed'
-                    : 'bg-primary text-white hover:bg-primary-dark'
+                  !selectedOption
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-primary text-white hover:bg-primary-dark"
                 }`}
               >
                 Sonraki Soru
@@ -352,7 +418,7 @@ const TakeAssessment = () => {
                     Gönderiliyor...
                   </>
                 ) : (
-                  'Tamamla'
+                  "Tamamla"
                 )}
               </button>
             </div>
@@ -363,4 +429,4 @@ const TakeAssessment = () => {
   );
 };
 
-export default TakeAssessment;
+export default UserAssessment;

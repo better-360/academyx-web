@@ -1,49 +1,73 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { format } from 'date-fns';
+import { tr } from 'date-fns/locale';
 import {
-  ClipboardList,
-  AlertCircle,
-  CheckCircle,
+  BarChart as ChartIcon,
   Clock,
+  CheckCircle,
+  ChevronRight,
+  BookOpen,
+  Brain,
+  Target,
+  TrendingUp,
   Calendar,
+  Bell,
+  User,
+  Settings,
+  LogOut,
+  ChevronDown,
+  LayoutDashboard,
+  GraduationCap,
+  ClipboardList,
+  HelpCircle
 } from "lucide-react";
 import { getUserData } from "../../http/requests";
 import { setUserData } from "../../store/slices/userSlice";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import instance from "../../http/instance";
+import { getMyCompanySurveys } from "../../http/requests/companyRequests";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [surveys, setSurveys] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const userData=useAppSelector((state)=>state.user.userData);
-
-  
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userData = useAppSelector((state) => state.user.userData);
   const dispatch = useAppDispatch();
+
+  // Mock data for demonstration
+  const mockStats = {
+    weeklyCompletedSurveys: 3,
+    totalPendingSurveys: 5,
+    completionRate: 75,
+    weeklyTarget: 5
+  };
+
   useEffect(() => {
-    fetchUserData();
-    fetchSurveys();
+    fetcSurveys();
   }, []);
 
-  const fetchUserData = async () => {
-    const userdata = await getUserData();
-    dispatch(setUserData(userdata));
+  const fetcSurveys = async () => {
+    try {
+      setLoading(true);
+      const surveys = await getMyCompanySurveys();
+      setSurveys(surveys);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      setError("Anketler yüklenirken bir hata oluştu.");
+      setLoading(false);
+    }
   };
-  
 
-  const fetchSurveys = async () => {
-    const surveys=await instance.get(`/companies/${userData.companyId}/surveys`);
-    setSurveys(surveys.data);
-    setLoading(false);
-  };
+
+
 
   const getStatusColor = (status: string, dueDate?: string) => {
-    if (status === "completed")
-      return "bg-green-100 text-green-800 border-green-200";
-    if (dueDate && new Date(dueDate) < new Date())
-      return "bg-red-100 text-red-800 border-red-200";
-    return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    if (status === "completed") return "bg-emerald-100 text-emerald-800";
+    if (dueDate && new Date(dueDate) < new Date()) return "bg-red-100 text-red-800";
+    return "bg-blue-100 text-blue-800";
   };
 
   const getStatusText = (status: string, dueDate?: string) => {
@@ -52,205 +76,178 @@ const Dashboard = () => {
     return "Bekliyor";
   };
 
-  const getStatusIcon = (status: string, dueDate?: string) => {
-    if (status === "completed") return <CheckCircle className="w-5 h-5" />;
-    if (dueDate && new Date(dueDate) < new Date())
-      return <AlertCircle className="w-5 h-5" />;
-    return <Clock className="w-5 h-5" />;
-  };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
-  const completedCount = surveys.filter(
-    (a) => a.status === "completed"
-  ).length;
-  const pendingCount = surveys.filter((a) => a.status === "pending").length;
-
   return (
-    <div>
-      {/* Welcome Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-primary-darker">
-              Hoş Geldin, {userData.firstName}
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Değerlendirme platformunda seni görmekten mutluluk duyuyoruz
-            </p>
-          </div>
-          <div className="hidden md:block">
-            <img
-              src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80"
-              alt="Dashboard illustration"
-              className="h-24 w-auto rounded-lg object-cover"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-primary bg-opacity-10 rounded-lg">
-              <ClipboardList className="w-6 h-6 text-primary" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">
-                Toplam Değerlendirme
-              </p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {surveys.length}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <CheckCircle className="w-6 h-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Tamamlanan</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {completedCount}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <Clock className="w-6 h-6 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Bekleyen</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {pendingCount}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
-          <div className="flex">
-            <AlertCircle className="h-5 w-5 text-red-400" />
-            <p className="ml-3 text-sm text-red-700">{error}</p>
-          </div>
-        </div>
-      )}
-
-      {/* surveys Grid */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Değerlendirmelerim
-          </h2>
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <span className="flex items-center">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-              Tamamlanan
-            </span>
-            <span className="flex items-center">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
-              Bekleyen
-            </span>
-            <span className="flex items-center">
-              <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
-              Süresi Dolan
-            </span>
-          </div>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {surveys.map((assessment) => (
-            <div
-              key={assessment.id}
-              className="relative bg-white rounded-lg border border-gray-200 hover:border-primary transition-colors overflow-hidden group"
-            >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-2 bg-primary bg-opacity-10 rounded-lg">
-                    <ClipboardList className="w-6 h-6 text-primary" />
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                      assessment.status,
-                      assessment.dueDate
-                    )}`}
-                  >
-                    {getStatusText(assessment.status, assessment.dueDate)}
-                  </span>
-                </div>
-
-                <h3 className="font-semibold text-lg text-gray-900 mb-2">
-                  {assessment.courseName}
-                </h3>
-
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div className="flex items-center">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    <span>
-                      Atanma:{" "}
-                      {new Date(assessment.assignedAt).toLocaleDateString(
-                        "tr-TR"
-                      )}
-                    </span>
-                  </div>
-                  {assessment.dueDate && (
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-2" />
-                      <span>
-                        Son Tarih:{" "}
-                        {new Date(assessment.dueDate).toLocaleDateString(
-                          "tr-TR"
-                        )}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {assessment.status !== "completed" && (
-                  <button
-                    onClick={() =>
-                      navigate(`/user/assessment/${assessment.id}`)
-                    }
-                    className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
-                  >
-                    <CheckCircle className="w-5 h-5 mr-2" />
-                    Değerlendirmeyi Başlat
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {surveys.length === 0 && (
-            <div className="col-span-full">
-              <div className="text-center py-12">
-                <ClipboardList className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-1">
-                  Henüz değerlendirmeniz yok
-                </h3>
-                <p className="text-gray-600">
-                  Size atanan değerlendirmeler burada görüntülenecektir.
+    <div className="min-h-screen bg-gray-50">
+        <main className="py-6 px-4 sm:px-6 lg:px-8">
+          {/* Welcome Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="sm:flex sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Hoş Geldin, {userData.firstName}!
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Bu hafta {mockStats.weeklyCompletedSurveys} anket tamamladın. Hedefe ulaşmana {mockStats.weeklyTarget - mockStats.weeklyCompletedSurveys} anket kaldı.
                 </p>
               </div>
+              <div className="mt-4 sm:mt-0">
+                <div className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                  <Target className="h-5 w-5 mr-2 text-primary" />
+                  Haftalık Hedef: {mockStats.weeklyTarget} Anket
+                </div>
+              </div>
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 gap-6 mb-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <ChartIcon className="h-6 w-6 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">Tamamlama Oranı</p>
+                  <p className="text-2xl font-semibold text-gray-900">{mockStats.completionRate}%</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-emerald-100 rounded-lg">
+                  <CheckCircle className="h-6 w-6 text-emerald-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">Bu Hafta Tamamlanan</p>
+                  <p className="text-2xl font-semibold text-gray-900">{mockStats.weeklyCompletedSurveys}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <Clock className="h-6 w-6 text-amber-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">Bekleyen Anketler</p>
+                  <p className="text-2xl font-semibold text-gray-900">{mockStats.totalPendingSurveys}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <TrendingUp className="h-6 w-6 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">Gelişim Puanı</p>
+                  <p className="text-2xl font-semibold text-gray-900">85</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Pending Surveys Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Bekleyen Anketler</h3>
+              <a href="#" className="text-sm text-primary hover:text-primary-dark flex items-center">
+                Tümünü Gör
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </a>
+            </div>
+
+            <div className="space-y-4">
+              {surveys.filter(s => s.status !== 'completed').map((survey) => (
+                <div
+                  key={survey.id}
+                  className="border border-gray-200 rounded-lg p-4 hover:border-primary transition-colors"
+                >
+                  <div className="sm:flex sm:items-center sm:justify-between">
+                    <div>
+                      <h4 className="text-base font-medium text-gray-900">{survey.title}</h4>
+                      <div className="mt-1 sm:flex sm:items-center sm:space-x-4">
+                        <div className="flex items-center text-sm text-gray-500">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          {format(new Date(survey.dueDate), 'd MMMM yyyy', { locale: tr })}
+                        </div>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            getStatusColor(survey.status, survey.dueDate)
+                          }`}
+                        >
+                          {getStatusText(survey.status, survey.dueDate)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mt-4 sm:mt-0">
+                      <button
+                        onClick={() => navigate(`/user/assessments/${survey.id}`)}
+                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                      >
+                        Ankete Başla
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* AI Recommendations Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center">
+                <Brain className="h-6 w-6 text-primary mr-2" />
+                <h3 className="text-lg font-semibold text-gray-900">Yapay Zeka Önerileri</h3>
+              </div>
+              <a href="#" className="text-sm text-primary hover:text-primary-dark flex items-center">
+                Tüm Öneriler
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </a>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              {surveys.map((survey) => (
+                <div
+                  key={survey.id}
+                  className="border border-gray-200 rounded-lg p-4 hover:border-primary transition-colors"
+                >
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-1">
+                      <h4 className="text-base font-medium text-gray-900">{survey.title}</h4>
+                      <p className="mt-1 text-sm text-gray-500">{survey.description}</p>
+                      <div className="mt-2 flex items-center space-x-4">
+                        <span className="text-xs text-gray-500">
+                          <Clock className="h-4 w-4 inline mr-1" />
+                          {survey?.duration?? 0} Dakika
+                        </span>
+                        <span className="text-xs text-primary">
+                          {survey?.relevance ?? 0}%
+                        </span>
+                      </div>
+                      <button className="mt-3 text-sm text-primary hover:text-primary-dark font-medium">
+                        Eğitime Başla
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </main>
     </div>
   );
 };

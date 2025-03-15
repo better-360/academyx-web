@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, Mail, Lock, AlertCircle } from "lucide-react";
 import { loginWithEmail } from "../../http/requests";
-import { saveUserTokens } from "../../utils/storage";
+import { saveUserTokens, setActiveCompanyId } from "../../utils/storage";
 import { useAppDispatch } from "../../store/hooks";
 import { login } from "../../store/slices/userSlice";
 
@@ -20,27 +20,31 @@ const UserLogin = () => {
     setError("");
 
     try {
-      const userLogin = await loginWithEmail(email, password);
-      dispatch(login(userLogin));
-      saveUserTokens(userLogin.tokens);
-      if (userLogin.user.role === "COMPANY_ADMIN") {
+      const loginData = await loginWithEmail(email, password);
+      // Only store serializable data
+      const { tokens, user } = loginData;
+      saveUserTokens(tokens);
+      dispatch(login({ user, tokens }));
+      setActiveCompanyId(user.companyId);
+
+      if (user.role === "COMPANY_ADMIN") {
         throw new Error("Bu hesap çalışan hesabı değil.");
       }
       navigate("/user");
-    } catch (error: any) {
-      console.error("Login error:", error);
-      if (error.message === "Bu hesap çalışan hesabı değil.") {
-        setError(error.message);
-      } else if (error.code === "auth/invalid-email") {
-        setError("Geçersiz e-posta adresi.");
-      } else if (error.code === "auth/user-not-found") {
-        setError("Bu e-posta adresiyle kayıtlı bir hesap bulunamadı.");
-      } else if (error.code === "auth/wrong-password") {
-        setError("Hatalı şifre.");
-      } else {
-        setError("Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");
-      }
-    } finally {
+     } catch (error: any) {
+  // Konsola yazdırırken sembollerden kurtulmak için bu satırı kullan.
+  console.error("Login error:", JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error))));
+
+  if (error.message === "Bu hesap çalışan hesabı değil.") {
+    setError(error.message);
+  } else if (error.code === "auth/invalid-email") {
+    setError("Geçersiz e-posta adresi.");
+  } else if (error.code === "auth/wrong-password") {
+    setError("Hatalı şifre.");
+  } else {
+    setError("Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");
+  }
+} finally {
       setLoading(false);
     }
   };

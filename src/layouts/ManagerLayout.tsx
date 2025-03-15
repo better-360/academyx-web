@@ -15,7 +15,7 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { logOut } from '../store/slices/userSlice';
 import { removeTokens } from '../utils/storage';
 
-const UserLayout = () => {
+const ManagerLayout = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userData = useAppSelector((state) => state.user.userData);
   const navigate = useNavigate();
@@ -26,20 +26,26 @@ const UserLayout = () => {
     { 
       name: 'Dashboard', 
       icon: LayoutDashboard, 
-      href: '/user', 
-      current: location.pathname === '/user' 
+      href: '/manager', 
+      current: location.pathname === '/manager' 
     },
     { 
       name: 'Anketlerim', 
       icon: ClipboardList, 
-      href: '/user/assessments', 
-      current: location.pathname.startsWith('/user/assessments') 
+      href: '/manager/assessments', 
+      current: location.pathname.startsWith('/manager/assessments') 
+    },
+    { 
+      name: 'Personelim', 
+      icon: ClipboardList, 
+      href: '/manager/personnel',
+      current: location.pathname.startsWith('/manager/personnel') 
     },
     { 
       name: 'Yardım', 
       icon: HelpCircle, 
-      href: '/user/help', 
-      current: location.pathname.startsWith('/user/help') 
+      href: '/manager/help', 
+      current: location.pathname.startsWith('/manager/help') 
     },
   ];
 
@@ -162,4 +168,4 @@ const UserLayout = () => {
   );
 };
 
-export default UserLayout;
+export default ManagerLayout;
