@@ -311,53 +311,6 @@ const Results = () => {
                   <h3 className="text-lg font-semibold mb-4">
                     {index + 1}. {result.question}
                   </h3>
-                  <div className="space-y-4">
-                    {result.options.map((option) => {
-                      const stats = calculateOptionStats(
-                        result.responses,
-                        option
-                      );
-                      return (
-                        <div key={option}>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium">
-                              {option}
-                            </span>
-                            <span className="text-sm text-gray-500">
-                              {stats.count} cevap ({stats.percentage}%)
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-primary h-2 rounded-full transition-all duration-500"
-                              style={{ width: `${stats.percentage}%` }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="mt-6">
-                    <h4 className="text-sm font-semibold mb-2">
-                      Katılımcılar ({result.responses.length})
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {result.responses.map((response) => (
-                        <div
-                          key={response.userId}
-                          className="bg-white p-3 rounded border border-gray-200"
-                        >
-                          <p className="font-medium">
-                            {response.firstName} {response.lastName}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Cevap: {response.selectedOption}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               ))}
             </div>
