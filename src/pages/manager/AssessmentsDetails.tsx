@@ -34,6 +34,7 @@ export default function ManagerAssessmentsDetails() {
     setError(null);
     try {
       const surveysData = await getCustomSurvey(id);
+
       setAssessment({
         title: surveysData.title || "",
         description: surveysData.description || "",

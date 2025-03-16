@@ -18,6 +18,7 @@ import {
   getCompanyUsers,
   updateCompanyUser,
 } from "../../http/requests/admin";
+import { generatePassword } from "../../utils/common";
 
 interface Company {
   id: string;
@@ -46,7 +47,7 @@ interface UserFormData {
   firstName: string;
   lastName: string;
   password: string;
-  companyRole: ""| "manager" | "employee";
+  companyRole: "manager" | "employee";
 }
 
 const CompanyDetails: React.FC = () => {
@@ -68,35 +69,7 @@ const CompanyDetails: React.FC = () => {
     companyRole: "employee",
   });
 
-  const generatePassword = () => {
-    const length = 12;
-    const charset =
-      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-    let password = "";
-
-    // En az bir büyük harf
-    password += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)];
-    // En az bir küçük harf
-    password += "abcdefghijklmnopqrstuvwxyz"[Math.floor(Math.random() * 26)];
-    // En az bir rakam
-    password += "0123456789"[Math.floor(Math.random() * 10)];
-    // En az bir özel karakter
-    password += "!@#$%^&*"[Math.floor(Math.random() * 8)];
-
-    // Geri kalan karakterler
-    for (let i = 4; i < length; i++) {
-      password += charset[Math.floor(Math.random() * charset.length)];
-    }
-
-    // Karakterleri karıştır
-    password = password
-      .split("")
-      .sort(() => Math.random() - 0.5)
-      .join("");
-
-    setUserFormData((prev) => ({ ...prev, password }));
-  };
-
+  
   const copyPassword = async () => {
     try {
       await navigator.clipboard.writeText(userFormData.password);
@@ -109,7 +82,9 @@ const CompanyDetails: React.FC = () => {
 
   useEffect(() => {
     if (!selectedUser && isUserModalOpen) {
-      generatePassword();
+      const randomPassword= generatePassword();
+      setUserFormData((prev) => ({ ...prev, randomPassword }));
+
     }
   }, [selectedUser, isUserModalOpen]);
 
@@ -185,15 +160,7 @@ const CompanyDetails: React.FC = () => {
         await addCompanyUser(company.id, userFormData);
       }
 
-      setIsUserModalOpen(false);
-      setSelectedUser(null);
-      setUserFormData({
-        email: "",
-        firstName: "",
-        lastName: "",
-        password: "",
-        companyRole: "",
-      });
+
       await fetchUsers();
     } catch (error: any) {
       console.error("Error saving user:", error);
@@ -212,6 +179,15 @@ const CompanyDetails: React.FC = () => {
     } finally {
       setLoading(false);
     }
+      setIsUserModalOpen(false);
+      setSelectedUser(null);
+      setUserFormData({
+        email: "",
+        firstName: "",
+        lastName: "",
+        password: "",
+        companyRole: "employee",
+      });
   };
 
   const handleEditUser = (user: User) => {
@@ -334,7 +310,7 @@ const CompanyDetails: React.FC = () => {
                 firstName: "",
                 lastName: "",
                 password: "",
-                companyRole: "",
+                companyRole: "employee",
               });
               setIsUserModalOpen(true);
             }}
@@ -500,7 +476,12 @@ const CompanyDetails: React.FC = () => {
                         </div>
                         <button
                           type="button"
-                          onClick={generatePassword}
+                          onClick={()=>
+                            setUserFormData((prev) => ({
+                              ...prev,
+                              password: generatePassword(),
+                            }))
+                          }
                           className="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm whitespace-nowrap"
                         >
                           Yeni Şifre
@@ -533,6 +514,7 @@ const CompanyDetails: React.FC = () => {
                 </label>
                 <select
                   value={userFormData.companyRole}
+                  defaultValue={"employee"}
                   onChange={(e) =>
                     setUserFormData({
                       ...userFormData,

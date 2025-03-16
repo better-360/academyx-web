@@ -10,6 +10,7 @@ import Results from "../pages/admin/Results";
 import AdminUsers from "../pages/admin/Users";
 import ProtectedRoute from "./ProtectedRoute";
 import AssessmentsDetails from "../pages/admin/AssessmentsDetails";
+import SurveyReportDetails from "../pages/admin/SurveyReport";
 
 export default function AdminRoutes() {
   return (
@@ -26,6 +27,8 @@ export default function AdminRoutes() {
           <Route path="assignments" element={<AssignAssessments />} />
           <Route path="assignments/:id/details" element={<AssessmentsDetails />} />
           <Route path="results" element={<Results />} />
+          <Route path="results/:id/report" element={<SurveyReportDetails />} />
+
         </Route>
       </Routes>
     </ProtectedRoute>

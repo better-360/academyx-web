@@ -42,6 +42,12 @@ const ManagerLayout = () => {
       current: location.pathname.startsWith('/manager/personnel') 
     },
     { 
+      name: 'Sonuçlar', 
+      icon: HelpCircle, 
+      href: '/manager/results', 
+      current: location.pathname.startsWith('/manager/results') 
+    },
+        { 
       name: 'Yardım', 
       icon: HelpCircle, 
       href: '/manager/help', 

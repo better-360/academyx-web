@@ -15,6 +15,17 @@ export const getMyCompanySurveys = async () =>
   }
 
 
+  export const getMyCompanySurveyResults = async (customSurveyId:string) =>
+    {
+      try {
+        const response = await instance.get(`/surveys/${customSurveyId}/results`);
+        return response.data;
+      } catch (error: any) {
+        throw error;
+      }
+    }
+
+
 export const getCompanyMyDetails = async (companyId?: string): Promise<any> => {
   try {
     // companyId parametresi varsa onu, yoksa localStorage'dan alınan değeri kullanın.
@@ -53,9 +64,10 @@ export const getMyPersonnels = async (companyId?: string): Promise<any> => {
   }
 };
 
-  export const addPersonnel = async (companyId:string,data:any) =>
+  export const addPersonnel = async (data:any) =>
     {
       try {
+        const companyId = getActiveCompanyId();
         const response = await instance.post(`/companies/${companyId}/add-personnel`,data);
         return response.data;
       } catch (error: any) {

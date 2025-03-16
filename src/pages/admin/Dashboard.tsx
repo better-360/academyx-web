@@ -16,7 +16,6 @@ interface DashboardStats {
   totalCompanies: number;
   totalUsers: number;
   activeSurveys: number;
-  completionRate: number;
   recentActivity: Array<{
     id: string;
     type: 'company' | 'survey' | 'user';
@@ -34,7 +33,6 @@ const AdminDashboard = () => {
     totalCompanies: 0,
     totalUsers: 0,
     activeSurveys: 0,
-    completionRate: 0,
     recentActivity: [],
   });
 
@@ -45,17 +43,13 @@ const AdminDashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const [companies, surveys, results] = await Promise.all([
-        getAllCompanines(),
-        getAllCustomSurveys(),
-        getAllResults(),
-      ]);
-
+      const companies = await getAllCompanines();
+      const surveys = await getAllCustomSurveys();
+      console.log(companies, surveys);
       setStats({
         totalCompanies: companies.length,
-        totalUsers: companies.reduce((acc, company) => acc + (company.userCount || 0), 0),
+        totalUsers: companies.reduce((acc:any, company:any) => acc + (company.userCount || 0), 0),
         activeSurveys: surveys.length,
-        completionRate: calculateCompletionRate(results),
         recentActivity: generateRecentActivity(companies, surveys),
       });
     } catch (error) {
@@ -125,7 +119,7 @@ const AdminDashboard = () => {
             </div>
             <div className="flex space-x-3">
               <Link
-                to="/admin/companies/new"
+                to="/admin/companies"
                 className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark"
               >
                 <Plus className="h-5 w-5 mr-2" />
@@ -143,7 +137,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 gap-6 mb-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 mb-8 sm:grid-cols-2 lg:grid-cols-3">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 bg-blue-100 rounded-lg">
@@ -176,26 +170,6 @@ const AdminDashboard = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Aktif Anketler</p>
                 <p className="text-2xl font-semibold text-gray-900">{stats.activeSurveys}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <BarChart className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Tamamlanma Oranı</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.completionRate}%</p>
-              </div>
-            </div>
-            <div className="mt-4">
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-yellow-500 h-2 rounded-full"
-                  style={{ width: `${stats.completionRate}%` }}
-                />
               </div>
             </div>
           </div>
