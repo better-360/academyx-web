@@ -107,24 +107,12 @@ const Results = () => {
   };
 
   const handleGenerateReport = async (surveyId: string) => {
- try {
-  await generateReport(surveyId);
- } catch (error) {
-  console.error("Error generating report:", error);
-  toast.error("Rapor oluşturulurken bir hata oluştu.");
-  setError("Rapor oluşturulurken bir hata oluştu.");
- }
-    setSurveyResults(
-      (prev) =>
-        prev && { ...prev, reportStatus: "processing" }
-    );
-    // Simulate API call with setTimeout
-    setTimeout(() => {
-      setSurveyResults(
-        (prev) =>
-          prev && { ...prev, reportStatus: "completed" }
-      );
-    }, 5000);
+    try {
+      await generateReport(surveyId);
+    } catch (error) {
+      console.error("Error generating report:", error);
+      toast.error("Rapor oluşturulurken bir hata oluştu.");
+    }
   };
 
   const handleViewReport = (surveyId: string) => {

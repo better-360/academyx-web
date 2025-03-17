@@ -83,7 +83,7 @@ const CompanyDetails: React.FC = () => {
   useEffect(() => {
     if (!selectedUser && isUserModalOpen) {
       const randomPassword= generatePassword();
-      setUserFormData((prev) => ({ ...prev, randomPassword }));
+      setUserFormData((prev) => ({ ...prev, password:randomPassword }));
 
     }
   }, [selectedUser, isUserModalOpen]);
