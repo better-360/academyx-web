@@ -71,6 +71,18 @@ export const getSurveyResults = async (customSurveyId: string) => {
   }
 };
 
+export const generateReport = async (customSurveyId: string) => {
+  try {
+    const response = await instance.post(`admin/reports/generate`,{
+      id:customSurveyId,
+      type: "custom"
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error;
+  }
+};
+
 
 export const getAllResults = async () => {
   try {

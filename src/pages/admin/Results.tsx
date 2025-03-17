@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import {
   BarChart,
   PieChart,
-  Users,
   Building2,
   AlertCircle,
   ChevronLeft,
@@ -13,43 +12,27 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
+  generateReport,
   getAllCompanines,
   getCompanyCustomSurveys,
   getSurveyResults,
 } from "../../http/requests/admin";
-
+import toast from "react-hot-toast";
 
 export interface IResponseOption {
   option: string;
   responseCount: number;
 }
 
-export interface ISurveyResult {
-  status: string;
+export interface ISurveyResponses {
   questionId: string;
   question: string;
   responses: IResponseOption[];
 }
 
-const statusText=(status:string)=>{
-  switch(status){
-    case "generating":
-      return "Rapor Oluşturuluyor...";
-    case "completed":
-      return "Rapor Oluşturuldu";
-    default:
-      return "AI Rapor Üret";
-  }
-}
-const statusColor=(status:string)=>{
-  switch(status){
-    case "generating":
-      return "bg-gray-400";
-    case "completed":
-      return "bg-green-600";
-    default:
-      return "bg-primary";
-  }
+export interface ISurveyResult {
+  responses: ISurveyResponses[];
+  reportStatus: string;
 }
 
 const Results = () => {
@@ -58,7 +41,9 @@ const Results = () => {
   const [selectedCompany, setSelectedCompany] = useState<any>(null);
   const [surveys, setSurveys] = useState<any[]>([]);
   const [selectedSurvey, setSelectedSurvey] = useState<any>();
-  const [surveyResults, setSurveyResults] = useState<ISurveyResult[]>([]);
+  const [surveyResults, setSurveyResults] = useState<ISurveyResult | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -98,7 +83,7 @@ const Results = () => {
       const data = await getCompanyCustomSurveys(companyId);
       setSurveys(data);
       setSelectedSurvey(null);
-      setSurveyResults([]);
+      setSurveyResults(null);
     } catch (error) {
       console.error("Error fetching surveys:", error);
       setError("Anketler yüklenirken bir hata oluştu.");
@@ -111,6 +96,7 @@ const Results = () => {
     setLoading(true);
     try {
       const data = await getSurveyResults(surveyId);
+      console.log("gelen data", data);
       setSurveyResults(data);
     } catch (error) {
       console.error("Error fetching survey results:", error);
@@ -121,37 +107,28 @@ const Results = () => {
   };
 
   const handleGenerateReport = async (surveyId: string) => {
-    setSurveyResults((prev) =>
-      prev.map((result) =>
-        result.questionId === surveyId
-          ? { ...result, status: "generating" }
-          : result
-      )
+ try {
+  await generateReport(surveyId);
+ } catch (error) {
+  console.error("Error generating report:", error);
+  toast.error("Rapor oluşturulurken bir hata oluştu.");
+  setError("Rapor oluşturulurken bir hata oluştu.");
+ }
+    setSurveyResults(
+      (prev) =>
+        prev && { ...prev, reportStatus: "processing" }
     );
-    
     // Simulate API call with setTimeout
     setTimeout(() => {
-      setSurveyResults((prev) =>
-        prev.map((result) =>
-          result.questionId === surveyId
-            ? { ...result, status: "completed" }
-            : result
-        )
+      setSurveyResults(
+        (prev) =>
+          prev && { ...prev, reportStatus: "completed" }
       );
     }, 5000);
   };
 
   const handleViewReport = (surveyId: string) => {
     navigate(`/admin/results/${surveyId}/report`);
-  };
-
-  const calculateOptionStats = (responses: any[], option: string) => {
-    const count = responses.filter((r) => r.selectedOption === option).length;
-    const percentage = (count / responses.length) * 100 || 0;
-    return {
-      count,
-      percentage: Math.round(percentage),
-    };
   };
 
   const filteredCompanies = companies.filter((company) =>
@@ -192,7 +169,6 @@ const Results = () => {
       )}
 
       {!selectedCompany ? (
-        // Company Selection View
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="mb-6">
             <div className="relative">
@@ -206,7 +182,6 @@ const Results = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             </div>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCompanies.map((company) => (
               <div
@@ -230,7 +205,6 @@ const Results = () => {
           </div>
         </div>
       ) : !selectedSurvey ? (
-        // Survey Selection View
         <div>
           <button
             onClick={() => setSelectedCompany(null)}
@@ -239,7 +213,6 @@ const Results = () => {
             <ChevronLeft className="w-5 h-5 mr-2" />
             Şirket Seçimine Dön
           </button>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {surveys.map((survey) => (
               <div
@@ -252,16 +225,11 @@ const Results = () => {
                   <h3 className="text-lg font-semibold">{survey.title}</h3>
                 </div>
                 <p className="text-sm text-gray-600">{survey.description}</p>
-                <div className="mt-4 flex items-center text-sm text-gray-500">
-                  <Users className="w-4 h-4 mr-2" />
-                  {survey.totalResponses || 0} katılımcı
-                </div>
               </div>
             ))}
           </div>
         </div>
       ) : (
-        // Survey Results View
         <div>
           <div className="flex justify-between items-center mb-6">
             <button
@@ -271,8 +239,7 @@ const Results = () => {
               <ChevronLeft className="w-5 h-5 mr-2" />
               Anket Seçimine Dön
             </button>
-
-            {selectedSurvey.status !== "completed" ? (
+            {surveyResults && surveyResults?.reportStatus === "waiting" ? (
               <button
                 onClick={() => handleGenerateReport(selectedSurvey.id)}
                 className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
@@ -280,7 +247,7 @@ const Results = () => {
                 <Brain className="w-5 h-5 mr-2" />
                 AI Rapor Üret
               </button>
-            ) : selectedSurvey.status !== "processing" ? (
+            ) : surveyResults?.reportStatus === "processing" ? (
               <button
                 disabled
                 className="flex items-center px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed"
@@ -288,7 +255,7 @@ const Results = () => {
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                 Rapor Oluşturuluyor...
               </button>
-            ) : (
+            ) : surveyResults?.reportStatus === "completed" ? (
               <button
                 onClick={() => handleViewReport(selectedSurvey.id)}
                 className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -296,14 +263,12 @@ const Results = () => {
                 <FileText className="w-5 h-5 mr-2" />
                 Raporu Görüntüle
               </button>
-            )}
+            ) : null}
           </div>
-
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold mb-6">{selectedSurvey.title}</h2>
-
             <div className="space-y-8">
-            {surveyResults.map((result, index) => (
+              {surveyResults?.responses.map((result, index) => (
                 <div
                   key={result.questionId}
                   className="bg-gray-50 rounded-lg p-6"
@@ -313,7 +278,7 @@ const Results = () => {
                   </h3>
                   <div className="space-y-4">
                     {result.responses.map((response) => (
-                      <div key={response.option}>
+                      <div key={response.option} className="mb-2">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium">
                             {response.option}
