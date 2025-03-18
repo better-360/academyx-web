@@ -1,0 +1,90 @@
+/* SurveyReport.css */
+.survey-report-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .markdown-content {
+    background-color: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Başlıklar */
+  .markdown-content h1 {
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+  }
+  
+  .markdown-content h2 {
+    color: #444;
+    margin-top: 30px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  /* Tablolar */
+  .table-container {
+    overflow-x: auto;
+    margin: 20px 0;
+  }
+  
+  .markdown-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+  }
+  
+  .markdown-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+    text-align: left;
+    padding: 12px;
+    border: 1px solid #ddd;
+  }
+  
+  .markdown-table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+  }
+  
+  .markdown-table tr:nth-child(even) {
+    background-color: #fafafa;
+  }
+  
+  /* Listeler */
+  .markdown-content ul, .markdown-content ol {
+    padding-left: 25px;
+  }
+  
+  .markdown-content li {
+    margin-bottom: 8px;
+  }
+  
+  /* Kod blokları */
+  .markdown-content pre {
+    background-color: #f6f8fa;
+    padding: 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  
+  .markdown-content code {
+    font-family: 'Courier New', Courier, monospace;
+  }
+  
+  /* Yükleme ve hata durumları */
+  .loading, .error, .not-found {
+    text-align: center;
+    padding: 40px;
+    font-size: 18px;
+    color: #666;
+  }
+  
+  .error {
+    color: #d32f2f;
+  }
