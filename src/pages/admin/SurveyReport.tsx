@@ -18,6 +18,7 @@ export default function SurveyReportDetails() {
       try {
         setLoading(true);
         const response = await instance.get(`/admin/reports/${id}`);
+        console.log('Rapor:', response.data);
         setReport(response.data);
         setLoading(false);
       } catch (err) {
