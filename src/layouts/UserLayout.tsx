@@ -8,7 +8,6 @@ import {
   ChevronDown,
   LayoutDashboard,
   ClipboardList,
-  HelpCircle
 } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
@@ -100,11 +99,6 @@ const UserLayout = () => {
             </h1>
             
             <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-400 hover:text-gray-500 relative">
-                <Bell className="h-6 w-6" />
-                <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400"></span>
-              </button>
-              
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
