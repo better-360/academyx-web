@@ -176,86 +176,73 @@ export default function SurveyReportDetails() {
 
   return (
     <div className="survey-report-container">
-      <div className="report-header">
-        <h1>{companyName} - {surveyTitle} Analiz ve Değerlendirme Raporu</h1>
-        <p className="subtitle">AcademyX Eğitim Programları için Kapsamlı Değerlendirme</p>
-      </div>
-
-      <div className="report-metadata">
-        <div className="report-meta-info">
-          <div className="report-date">
-            <CalendarIcon /> <span>Oluşturulma: {reportDate}</span>
-          </div>
-          <div className="report-company">
-            <CompanyIcon /> <span>Şirket: {companyName}</span>
-          </div>
-          <div className="report-participants">
-            <UsersIcon /> <span>Katılımcı: {totalParticipants} kişi</span>
-          </div>
-        </div>
-        <button className="print-button no-print" onClick={handlePrint}>
-          <PrintIcon /> Raporu Yazdır
-        </button>
-      </div>
-
-      <div className="markdown-content" ref={contentRef}>
-        {/* İçindekiler tablosu */}
-        <TableOfContents content={processedContent} />
-
-        {/* Markdown içeriği */}
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeSlug]}
-          children={processedContent}
-          components={{
-            // Başlıklar için özel stil ve ID'ler
-            h1: ({ node, ...props }) => <h1 id={props.id} {...props} />,
-            h2: ({ node, ...props }) => <h2 id={props.id} {...props} />,
-            h3: ({ node, ...props }) => <h3 id={props.id} {...props} />,
-            
-            // Tablolar için özel stil
-            table: ({ node, ...props }) => (
-              <div className="table-container">
-                <table className="markdown-table" {...props} />
-              </div>
-            ),
-            
-            // Vurgulanmış içerikler için özel stil
-            blockquote: ({ node, ...props }) => (
-              <div className="info-box" {...props} />
-            ),
-            
-            // İçerik içinde %XX gibi yüzdelik ifadeleri bulup görselleştirme
-            p: ({ node, children, ...props }) => {
-              const content = String(children);
-              
-              // Yüzde ifadeleri içeren metinleri bul
-              const percentageRegex = /(\d+)%/g;
-              const matches = content.match(percentageRegex);
-              
-              if (matches) {
-                let processedContent = content;
-                matches.forEach(match => {
-                  const percentage = parseInt(match.replace('%', ''));
-                  processedContent = processedContent.replace(
-                    match,
-                    `<span class="highlight">${match}</span>`
-                  );
-                  
-                  // Yüzde çubuğunu ekle (opsiyonel)
-                  if (percentage >= 0 && percentage <= 100) {
-                    processedContent += `<div class="percentage-bar"><div class="fill" style="width: ${percentage}%"></div></div>`;
-                  }
-                });
-                
-                return <p {...props} dangerouslySetInnerHTML={{ __html: processedContent }} />;
-              }
-              
-              return <p {...props}>{children}</p>;
-            }
-          }}
-        />
-      </div>
-    </div>
+         <div className="report-header">
+           <h1>Better Pazarlama Anketi Analiz ve Değerlendirme Raporu</h1>
+           <p className="subtitle">Müşteri memnuniyeti ve pazarlama stratejilerinin kapsamlı analizi</p>
+         </div>
+   
+         <div className="report-metadata">
+           <div className="report-date">
+             <CalendarIcon /> <span>Oluşturulma: {reportDate}</span>
+           </div>
+           <button className="print-button no-print" onClick={handlePrint}>
+             <PrintIcon /> Raporu Yazdır
+           </button>
+         </div>
+   
+         <div className="markdown-content" ref={contentRef}>
+           {/* İçindekiler tablosu */}
+           <TableOfContents content={processedContent} />
+   
+           {/* Markdown içeriği */}
+           <ReactMarkdown
+             remarkPlugins={[remarkGfm]}
+             rehypePlugins={[rehypeSlug]}
+             children={processedContent}
+             components={{
+               // Başlıklar için özel stil ve ID'ler
+               h1: ({ node, ...props }) => <h1 id={props.id} {...props} />,
+               h2: ({ node, ...props }) => <h2 id={props.id} {...props} />,
+               h3: ({ node, ...props }) => <h3 id={props.id} {...props} />,
+               
+               // Tablolar için özel stil
+               table: ({ node, ...props }) => (
+                 <div className="table-container">
+                   <table className="markdown-table" {...props} />
+                 </div>
+               ),
+               
+               // Vurgulanmış içerikler için özel stil
+               blockquote: ({ node, ...props }) => (
+                 <blockquote className="info-box" {...props} />
+               ),
+               
+               // İçerik içinde %65 gibi yüzdelik ifadeleri bulup görselleştirme
+               p: ({ node, children, ...props }) => {
+                 const content = String(children);
+                 
+                 // Yüzde ifadeleri içeren metinleri bul
+                 const percentageRegex = /(\d+)%/g;
+                 const matches = content.match(percentageRegex);
+                 
+                 if (matches) {
+                   let processedContent = content;
+                   matches.forEach(match => {
+                     const percentage = parseInt(match.replace('%', ''));
+                     processedContent = processedContent.replace(
+                       match,
+                       `<span class="highlight">${match}</span>`
+                     );
+                   });
+                   
+                   return <p {...props} dangerouslySetInnerHTML={{ __html: processedContent }} />;
+                 }
+                 
+                 return <p {...props}>{children}</p>;
+               }
+             }}
+           />
+         </div>
+       </div>
   );
 }

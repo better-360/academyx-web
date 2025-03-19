@@ -6,6 +6,7 @@ import {
   CheckCircle,
   Clock,
   Calendar,
+  Eye,
 } from "lucide-react";
 import { useAppSelector } from "../../store/hooks";
 import { getManagerSurveys, getMyCompanySurveys } from "../../http/requests/companyRequests";
@@ -223,8 +224,8 @@ const ManagerDashboard = () => {
                     }
                     className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
                   >
-                    <CheckCircle className="w-5 h-5 mr-2" />
-                    Değerlendirmeyi Başlat
+                    <Eye className="w-5 h-5 mr-2" />
+                  Gözden Geçir
                   </button>
                 )}
               </div>
@@ -281,7 +282,7 @@ const ManagerDashboard = () => {
                 {assessment.status !== "completed" && (
                   <button
                     onClick={() =>
-                      navigate(`/manager/assessments/${assessment.id}`)
+                      navigate(`/manager/manager-assessment/${assessment.id}`)
                     }
                     className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
                   >

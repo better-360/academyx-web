@@ -56,6 +56,7 @@ const dispatch = useAppDispatch();
             </label>
             <input
               type="email"
+              placeholder='admin@academyx.com'
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:border-primary"
@@ -70,6 +71,7 @@ const dispatch = useAppDispatch();
             </label>
             <input
               type="password"
+              placeholder='123456'
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:border-primary"

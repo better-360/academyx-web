@@ -12,21 +12,26 @@ import {
 } from "../../http/requests/companyRequests";
 import { useNavigate } from "react-router-dom";
 
-export interface IResponseOption {
+interface OptionResponse {
   option: string;
   responseCount: number;
 }
 
-export interface ISurveyResult {
+interface QuestionResponse {
   questionId: string;
   question: string;
-  responses: IResponseOption[];
+  responses: OptionResponse[];
+}
+
+interface Report {
+  responses: QuestionResponse[];
+  reportStatus: string;
 }
 
 const ManagerResults = () => {
   const [surveys, setSurveys] = useState<any[]>([]);
   const [selectedSurvey, setSelectedSurvey] = useState<any>(null);
-  const [surveyResults, setSurveyResults] = useState<ISurveyResult[]>([]);
+  const [surveyResults, setSurveyResults] = useState<Report>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -58,6 +63,7 @@ const ManagerResults = () => {
     setLoading(true);
     try {
       const data = await getMyCompanySurveyResults(surveyId);
+      console.log("Survey results:", data);
       setSurveyResults(data);
     } catch (error) {
       console.error("Error fetching survey results:", error);
@@ -121,7 +127,6 @@ const ManagerResults = () => {
               <p className="text-sm text-gray-600">{survey.description}</p>
             </div>
           ))}
-
           {surveys.length === 0 && (
             <div className="col-span-full text-center py-12 text-gray-500">
               Henüz anket bulunmuyor.
@@ -132,66 +137,69 @@ const ManagerResults = () => {
         // Anket Sonuçları Görünümü
         <div>
           <div className="mb-6 flex justify-between items-center">
-          <button
-            onClick={() => setSelectedSurvey(null)}
-            className="flex items-center text-gray-600 hover:text-primary mb-6"
-          >
-            <ChevronLeft className="w-5 h-5 mr-2" />
-            Anket Seçimine Dön
-          </button>
-
-          <button
-                onClick={() => handleViewReport(selectedSurvey.id)}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                <FileText className="w-5 h-5 mr-2" />
-                Raporu Görüntüle
-              </button>
+            <button
+              onClick={() => setSelectedSurvey(null)}
+              className="flex items-center text-gray-600 hover:text-primary"
+            >
+              <ChevronLeft className="w-5 h-5 mr-2" />
+              Anket Seçimine Dön
+            </button>
+            <button
+              onClick={() => handleViewReport(selectedSurvey.id)}
+              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              <FileText className="w-5 h-5 mr-2" />
+              Raporu Görüntüle
+            </button>
           </div>
-          
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold mb-6">{selectedSurvey.title}</h2>
-
             <div className="space-y-8">
-              {surveyResults.map((result, index) => (
-                <div
-                  key={result.questionId}
-                  className="bg-gray-50 rounded-lg p-6"
-                >
-                  <h3 className="text-lg font-semibold mb-4">
-                    {index + 1}. {result.question}
-                  </h3>
-                  <div className="space-y-4">
-                    {result.responses.map((response) => (
-                      <div key={response.option}>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium">
-                            {response.option}
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            {response.responseCount} cevap
-                          </span>
+              {surveyResults?.responses && surveyResults.responses.length > 0 ? (
+                surveyResults.responses.map((result, index) => (
+                  <div
+                    key={result.questionId}
+                    className="bg-gray-50 rounded-lg p-6"
+                  >
+                    <h3 className="text-lg font-semibold mb-4">
+                      {index + 1}. {result.question}
+                    </h3>
+                    <div className="space-y-4">
+                      {result.responses.map((response) => (
+                        <div key={response.option} className="mb-2">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium">
+                              {response.option}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              {response.responseCount} cevap
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-primary h-2 rounded-full transition-all duration-500"
+                              style={{
+                                width: `${
+                                  (response.responseCount /
+                                    result.responses.reduce(
+                                      (acc, r) => acc + r.responseCount,
+                                      0
+                                    )) *
+                                  100
+                                }%`,
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-primary h-2 rounded-full transition-all duration-500"
-                            style={{
-                              width: `${
-                                (response.responseCount /
-                                  result.responses.reduce(
-                                    (acc, r) => acc + r.responseCount,
-                                    0
-                                  )) *
-                                100
-                              }%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-500">
+                  Henüz hiçbir soru cevaplanmadı.
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -199,5 +207,6 @@ const ManagerResults = () => {
     </div>
   );
 };
+
 
 export default ManagerResults;

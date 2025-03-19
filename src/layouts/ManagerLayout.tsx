@@ -47,12 +47,6 @@ const ManagerLayout = () => {
       href: '/manager/results', 
       current: location.pathname.startsWith('/manager/results') 
     },
-        { 
-      name: 'Yardım', 
-      icon: HelpCircle, 
-      href: '/manager/help', 
-      current: location.pathname.startsWith('/manager/help') 
-    },
   ];
 
   const handleLogout = async () => {
@@ -118,11 +112,6 @@ const ManagerLayout = () => {
             </h1>
             
             <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-400 hover:text-gray-500 relative">
-                <Bell className="h-6 w-6" />
-                <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400"></span>
-              </button>
-              
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
@@ -137,13 +126,13 @@ const ManagerLayout = () => {
 
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-200">
-                    <Link to="/user/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    <Link to="/manager/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                       <div className="flex items-center">
                         <User className="h-4 w-4 mr-2" />
                         Profil
                       </div>
                     </Link>
-                    <Link to="/user/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    <Link to="/manager/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                       <div className="flex items-center">
                         <Settings className="h-4 w-4 mr-2" />
                         Ayarlar

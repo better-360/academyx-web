@@ -107,6 +107,16 @@ export const getMyPersonnels = async (companyId?: string): Promise<any> => {
       }
     }
 
+  export const getManagerSurvey = async (surveyId:string) =>
+      {
+        try {
+          const response = await instance.get(`/surveys/manager/${surveyId}`);
+          return response.data;
+        } catch (error: any) {
+          throw error;
+        }
+      }
+  
   export const getManagerSurveys = async (companyId?:string) =>
       {
         try {

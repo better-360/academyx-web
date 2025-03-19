@@ -34,13 +34,7 @@ const UserLayout = () => {
       icon: ClipboardList, 
       href: '/user/assessments', 
       current: location.pathname.startsWith('/user/assessments') 
-    },
-    { 
-      name: 'Yardım', 
-      icon: HelpCircle, 
-      href: '/user/help', 
-      current: location.pathname.startsWith('/user/help') 
-    },
+    }
   ];
 
   const handleLogout = async () => {

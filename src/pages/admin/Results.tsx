@@ -256,45 +256,51 @@ const Results = () => {
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold mb-6">{selectedSurvey.title}</h2>
             <div className="space-y-8">
-              {surveyResults?.responses.map((result, index) => (
-                <div
-                  key={result.questionId}
-                  className="bg-gray-50 rounded-lg p-6"
-                >
-                  <h3 className="text-lg font-semibold mb-4">
-                    {index + 1}. {result.question}
-                  </h3>
-                  <div className="space-y-4">
-                    {result.responses.map((response) => (
-                      <div key={response.option} className="mb-2">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium">
-                            {response.option}
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            {response.responseCount} cevap
-                          </span>
+            {surveyResults?.responses && surveyResults.responses.length > 0 ? (
+                surveyResults.responses.map((result, index) => (
+                  <div
+                    key={result.questionId}
+                    className="bg-gray-50 rounded-lg p-6"
+                  >
+                    <h3 className="text-lg font-semibold mb-4">
+                      {index + 1}. {result.question}
+                    </h3>
+                    <div className="space-y-4">
+                      {result.responses.map((response) => (
+                        <div key={response.option} className="mb-2">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium">
+                              {response.option}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              {response.responseCount} cevap
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-primary h-2 rounded-full transition-all duration-500"
+                              style={{
+                                width: `${
+                                  (response.responseCount /
+                                    result.responses.reduce(
+                                      (acc, r) => acc + r.responseCount,
+                                      0
+                                    )) *
+                                  100
+                                }%`,
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-primary h-2 rounded-full transition-all duration-500"
-                            style={{
-                              width: `${
-                                (response.responseCount /
-                                  result.responses.reduce(
-                                    (acc, r) => acc + r.responseCount,
-                                    0
-                                  )) *
-                                100
-                              }%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-500">
+                  Henüz hiçbir soru cevaplanmadı.
                 </div>
-              ))}
+              )}  
             </div>
           </div>
         </div>
