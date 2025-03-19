@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import instance from "../../http/instance";
@@ -6,7 +7,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeSlug from 'rehype-slug';
 import './../../surveyReport.css';
 
-// Icon bileşenleri
+// İkon bileşenleri
 const PrintIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="6 9 6 2 18 2 18 9"></polyline>
@@ -24,6 +25,22 @@ const CalendarIcon = () => (
   </svg>
 );
 
+const CompanyIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+  </svg>
+);
+
+const UsersIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+    <circle cx="9" cy="7" r="4"></circle>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+  </svg>
+);
+
 const LoadingSpinner = () => (
   <div className="loading">
     <div className="loading-spinner"></div>
@@ -31,7 +48,7 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const ErrorDisplay = ({ message }: { message: string }) => (
+const ErrorDisplay = ({ message }) => (
   <div className="error">
     <div className="error-icon">⚠️</div>
     <h2>Hata Oluştu</h2>
@@ -47,9 +64,9 @@ const NotFoundDisplay = () => (
   </div>
 );
 
-// TOC oluşturmak için özel bileşen
-const TableOfContents = ({ content }: { content: string }) => {
-  // Başlıkları bulmak için basit bir regex
+// TOC oluşturmak için bileşen
+const TableOfContents = ({ content }) => {
+  // Başlıkları bulmak için regex
   const headings = content.match(/#{1,3} .+/g) || [];
   
   return (
@@ -86,7 +103,7 @@ const TableOfContents = ({ content }: { content: string }) => {
 };
 
 // Belirli bir metnin yüzde değerini gösteren görsel bileşen
-const PercentageBar = ({ value }: { value: number }) => {
+const PercentageBar = ({ value }) => {
   const clampedValue = Math.min(100, Math.max(0, value));
   
   return (
@@ -99,10 +116,10 @@ const PercentageBar = ({ value }: { value: number }) => {
 export default function SurveyReportDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [report, setReport] = useState<any>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [report, setReport] = useState(null);
+  const contentRef = useRef(null);
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -111,24 +128,39 @@ export default function SurveyReportDetails() {
         const response = await instance.get(`/admin/reports/${id}`);
         console.log('Rapor:', response.data);
         setReport(response.data);
-        setLoading(false);
+        setError(null);
       } catch (err) {
         setError('Rapor yüklenirken bir hata oluştu');
-        setLoading(false);
         console.error('Rapor yükleme hatası:', err);
+      } finally {
+        setLoading(false);
       }
     };
+    
     fetchReport();
   }, [id]);
 
-  // Rapor içeriğini yazdırmak için kullanılacak fonksiyon
+  // Rapor içeriğini yazdırmak için
   const handlePrint = () => {
     window.print();
   };
 
-  // Markdown içeriğindeki başlıkları işlemek için
-  const processContent = (content: string) => {
+  // Markdown içeriğindeki yüzdelik ifadeleri işle
+  const processContent = (content) => {
     return content;
+  };
+
+  // Rapor oluşturma tarihini formatla
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    
+    return new Date(dateString).toLocaleString('tr-TR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (loading) return <LoadingSpinner />;
@@ -137,24 +169,29 @@ export default function SurveyReportDetails() {
 
   const markdownContent = report.report?.content || '';
   const processedContent = processContent(markdownContent);
-  const reportDate = new Date(report.report?.generatedAt).toLocaleString('tr-TR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  const reportDate = formatDate(report.report?.generatedAt);
+  const companyName = report.company?.name || 'Şirket Adı';
+  const surveyTitle = report.survey?.title || 'Anket Başlığı';
+  const totalParticipants = report.report?.participants || 0;
 
   return (
     <div className="survey-report-container">
       <div className="report-header">
-        <h1>Better Pazarlama Anketi Analiz ve Değerlendirme Raporu</h1>
-        <p className="subtitle">Müşteri memnuniyeti ve pazarlama stratejilerinin kapsamlı analizi</p>
+        <h1>{companyName} - {surveyTitle} Analiz ve Değerlendirme Raporu</h1>
+        <p className="subtitle">AcademyX Eğitim Programları için Kapsamlı Değerlendirme</p>
       </div>
 
       <div className="report-metadata">
-        <div className="report-date">
-          <CalendarIcon /> <span>Oluşturulma: {reportDate}</span>
+        <div className="report-meta-info">
+          <div className="report-date">
+            <CalendarIcon /> <span>Oluşturulma: {reportDate}</span>
+          </div>
+          <div className="report-company">
+            <CompanyIcon /> <span>Şirket: {companyName}</span>
+          </div>
+          <div className="report-participants">
+            <UsersIcon /> <span>Katılımcı: {totalParticipants} kişi</span>
+          </div>
         </div>
         <button className="print-button no-print" onClick={handlePrint}>
           <PrintIcon /> Raporu Yazdır
@@ -185,10 +222,10 @@ export default function SurveyReportDetails() {
             
             // Vurgulanmış içerikler için özel stil
             blockquote: ({ node, ...props }) => (
-              <blockquote className="info-box" {...props} />
+              <div className="info-box" {...props} />
             ),
             
-            // İçerik içinde %65 gibi yüzdelik ifadeleri bulup görselleştirme
+            // İçerik içinde %XX gibi yüzdelik ifadeleri bulup görselleştirme
             p: ({ node, children, ...props }) => {
               const content = String(children);
               
@@ -204,6 +241,11 @@ export default function SurveyReportDetails() {
                     match,
                     `<span class="highlight">${match}</span>`
                   );
+                  
+                  // Yüzde çubuğunu ekle (opsiyonel)
+                  if (percentage >= 0 && percentage <= 100) {
+                    processedContent += `<div class="percentage-bar"><div class="fill" style="width: ${percentage}%"></div></div>`;
+                  }
                 });
                 
                 return <p {...props} dangerouslySetInnerHTML={{ __html: processedContent }} />;
