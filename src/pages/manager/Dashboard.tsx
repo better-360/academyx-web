@@ -7,16 +7,14 @@ import {
   Clock,
   Calendar,
 } from "lucide-react";
-import { getUserData } from "../../http/requests";
-import { setUserData } from "../../store/slices/userSlice";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import instance from "../../http/instance";
-import { getMyCompanySurveys } from "../../http/requests/companyRequests";
+import { useAppSelector } from "../../store/hooks";
+import { getManagerSurveys, getMyCompanySurveys } from "../../http/requests/companyRequests";
 
 const ManagerDashboard = () => {
   const navigate = useNavigate();
   const [surveys, setSurveys] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [managerSurveys, setManagerSurveys] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const userData=useAppSelector((state)=>state.user.userData);
 
@@ -29,6 +27,8 @@ const ManagerDashboard = () => {
   const fetchSurveys = async () => {
     setLoading(true);
     const surveys=await getMyCompanySurveys();
+   const managerS=await getManagerSurveys()
+   setManagerSurveys(managerS);
     setSurveys(surveys);
     setLoading(false);
   };
@@ -190,7 +190,7 @@ const ManagerDashboard = () => {
                 </div>
 
                 <h3 className="font-semibold text-lg text-gray-900 mb-2">
-                  {assessment.courseName}
+                  {assessment.title}
                 </h3>
 
                 <div className="space-y-2 text-sm text-gray-600">
@@ -219,7 +219,69 @@ const ManagerDashboard = () => {
                 {assessment.status !== "completed" && (
                   <button
                     onClick={() =>
-                      navigate(`/user/assessment/${assessment.id}`)
+                      navigate(`/manager/assessments/${assessment.id}`)
+                    }
+                    className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
+                  >
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    Değerlendirmeyi Başlat
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+
+{managerSurveys.map((assessment) => (
+            <div
+              key={assessment.id}
+              className="relative bg-white rounded-lg border border-gray-200 hover:border-primary transition-colors overflow-hidden group"
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-2 bg-primary bg-opacity-10 rounded-lg">
+                    <ClipboardList className="w-6 h-6 text-primary" />
+                  </div>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                      assessment.status,
+                      assessment.dueDate
+                    )}`}
+                  >
+                    {getStatusText(assessment.status, assessment.dueDate)}
+                  </span>
+                </div>
+
+                <h3 className="font-semibold text-lg text-gray-900 mb-2">
+                  {assessment.title}
+                </h3>
+
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div className="flex items-center">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    <span>
+                      Atanma:{" "}
+                      {new Date(assessment.createdAt).toLocaleDateString(
+                        "tr-TR"
+                      )}
+                    </span>
+                  </div>
+                  {assessment.dueDate && (
+                    <div className="flex items-center">
+                      <Clock className="w-4 h-4 mr-2" />
+                      <span>
+                        Son Tarih:{" "}
+                        {new Date(assessment.dueDate).toLocaleDateString(
+                          "tr-TR"
+                        )}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {assessment.status !== "completed" && (
+                  <button
+                    onClick={() =>
+                      navigate(`/manager/assessments/${assessment.id}`)
                     }
                     className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
                   >
@@ -232,6 +294,19 @@ const ManagerDashboard = () => {
           ))}
 
           {surveys.length === 0 && (
+            <div className="col-span-full">
+              <div className="text-center py-12">
+                <ClipboardList className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-1">
+                  Henüz değerlendirmeniz yok
+                </h3>
+                <p className="text-gray-600">
+                  Size atanan değerlendirmeler burada görüntülenecektir.
+                </p>
+              </div>
+            </div>
+          )}
+          {managerSurveys.length === 0 && (
             <div className="col-span-full">
               <div className="text-center py-12">
                 <ClipboardList className="w-12 h-12 text-gray-400 mx-auto mb-4" />

@@ -107,10 +107,11 @@ export const getMyPersonnels = async (companyId?: string): Promise<any> => {
       }
     }
 
-  export const getManagerSurvey = async (surveyId:string) =>
+  export const getManagerSurveys = async (companyId?:string) =>
       {
         try {
-          const response = await instance.post(`/surveys/custom/${surveyId}`);
+          const currentId = companyId || getActiveCompanyId();
+          const response = await instance.get(`/companies/${currentId}/manager-surveys`);
           return response.data;
         } catch (error: any) {
           throw error;
