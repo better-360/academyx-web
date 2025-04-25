@@ -1,11 +1,25 @@
 //@ts-nocheck
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import instance from "../../http/instance";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSlug from 'rehype-slug';
 import './../../surveyReport.css';
+import SurveyPie from "./components/PieChart";
+
+
+interface OptionRow {
+  option: string;
+  count: number;
+  percent: number;
+}
+
+// API’den gelen rapor nesnen
+declare const report: {
+  report: { options: OptionRow[] };
+};
+
 
 // İkon bileşenleri
 const PrintIcon = () => (
@@ -219,27 +233,22 @@ export default function SurveyReportDetails() {
                
                // İçerik içinde %65 gibi yüzdelik ifadeleri bulup görselleştirme
                p: ({ node, children, ...props }) => {
-                 const content = String(children);
-                 
-                 // Yüzde ifadeleri içeren metinleri bul
-                 const percentageRegex = /(\d+)%/g;
-                 const matches = content.match(percentageRegex);
-                 
-                 if (matches) {
-                   let processedContent = content;
-                   matches.forEach(match => {
-                     const percentage = parseInt(match.replace('%', ''));
-                     processedContent = processedContent.replace(
-                       match,
-                       `<span class="highlight">${match}</span>`
-                     );
-                   });
-                   
-                   return <p {...props} dangerouslySetInnerHTML={{ __html: processedContent }} />;
-                 }
-                 
-                 return <p {...props}>{children}</p>;
-               }
+                // children: ['Bu metin %75 oranında ...', <em>vurgulu</em>, ' devam ediyor']
+                const processedChildren = React.Children.map(children, child => {
+                  if (typeof child !== 'string') return child;
+                  // Metni yüzde ifadelerine göre bölüyoruz
+                  return child
+                    .split(/(\d+%)/g)   // yüzde ifadelerini de koruyarak böler
+                    .filter(Boolean)    // boş stringleri atar
+                    .map((segment, i) =>
+                      /^\d+%$/.test(segment) // eğer sadece yüzde ifadesiyse
+                        ? <span key={i} className="highlight">{segment}</span>
+                        : segment           // yoksa düz metin
+                    );
+                });
+              
+                return <p {...props}>{processedChildren}</p>;
+              }
              }}
            />
          </div>

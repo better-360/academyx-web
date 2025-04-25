@@ -20,20 +20,26 @@ const ManagerLogin = () => {
     setError("");
 
     try {
-      const logindata=await loginWithEmail(email, password);
+      const logindata = await loginWithEmail(email, password);
+      
+      if (!logindata || !logindata.user || !logindata.tokens) {
+        throw new Error("Invalid response from server");
+      }
+
+      if (logindata.user.companyRole !== "manager") {
+        throw new Error("Bu hesap yönetici hesabı değil.");
+      }
+
       saveUserTokens(logindata.tokens);
       dispatch(login(logindata));
       setActiveCompanyId(logindata.user.companyId);
-
-      if (logindata.user.companyRole === "manager") {
-        navigate("/manager");
-      } else {
-        throw new Error("Bu hesap company admin hesabı değil.");
-      } 
+      navigate("/manager");
     } catch (error: any) {
       console.error("Login error:", error);
-      if (error.message === "Bu hesap çalışan hesabı değil.") {
+      if (error.message === "Bu hesap yönetici hesabı değil.") {
         setError(error.message);
+      } else if (error.response?.status === 401) {
+        setError("E-posta veya şifre hatalı.");
       } else if (error.code === "auth/invalid-email") {
         setError("Geçersiz e-posta adresi.");
       } else if (error.code === "auth/user-not-found") {

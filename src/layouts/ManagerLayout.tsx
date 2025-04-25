@@ -1,9 +1,7 @@
 import { useState } from "react";
 import {
   BookOpen,
-  Bell,
   User,
-  Settings,
   LogOut,
   ChevronDown,
   LayoutDashboard,
@@ -28,12 +26,6 @@ const ManagerLayout = () => {
       icon: LayoutDashboard, 
       href: '/manager', 
       current: location.pathname === '/manager' 
-    },
-    { 
-      name: 'Anketlerim', 
-      icon: ClipboardList, 
-      href: '/manager/assessments', 
-      current: location.pathname.startsWith('/manager/assessments') 
     },
     { 
       name: 'Personelim', 
@@ -126,18 +118,6 @@ const ManagerLayout = () => {
 
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-200">
-                    <Link to="/manager/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <User className="h-4 w-4 mr-2" />
-                        Profil
-                      </div>
-                    </Link>
-                    <Link to="/manager/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Ayarlar
-                      </div>
-                    </Link>
                     <button 
                       onClick={handleLogout}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

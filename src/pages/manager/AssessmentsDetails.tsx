@@ -53,11 +53,11 @@ export default function ManagerAssessmentsDetails() {
   return (
     <div className="container mx-auto px-4 py-6">
       <button
-        onClick={() => navigate("/manager/assessments", { replace: true })}
+        onClick={() => navigate("/manager", { replace: true })}
         className="flex items-center text-gray-600 hover:text-primary mb-6"
       >
         <ArrowLeft className="w-5 h-5 mr-2" />
-        Değerlendirmelere Dön
+        Dashboard'a Dön
       </button>
 
       <div className="bg-white rounded-lg shadow-md p-8">
