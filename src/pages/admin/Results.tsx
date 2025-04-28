@@ -109,6 +109,12 @@ const Results = () => {
   const handleGenerateReport = async (surveyId: string) => {
     try {
       await generateReport(surveyId);
+      setSurveyResults((prev) => {
+        if (prev) {
+          return { ...prev, reportStatus: "processing" };
+        }
+        return prev;
+      });
     } catch (error) {
       console.error("Error generating report:", error);
       toast.error("Rapor oluşturulurken bir hata oluştu.");
